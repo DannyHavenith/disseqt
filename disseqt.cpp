@@ -46,7 +46,7 @@ struct SqlGrammar : qi::grammar<Iterator, Skipper>
     rule create_table_stmt =
             CREATE >> -(TEMP|TEMPORARY) >> TABLE
         >   -(IF >> NOT >> EXISTS)
-        >>  -(database_name >> '.') >> table_name
+        >>  composite_table_name
         >>  (
                 (AS > select_stmt)
             |   ('(' >> column_def%',' >> -(table_constraint%',') > ')' >> -( WITHOUT >> ROWID))
@@ -102,7 +102,7 @@ struct SqlGrammar : qi::grammar<Iterator, Skipper>
     rule table_constraint =
             -(CONSTRAINT > name)
         >>  (
-                ((PRIMARY >> KEY|UNIQUE) > '(' >> indexed_column%',' >> ')' >> conflict_clause)
+                ((PRIMARY >> KEY|UNIQUE) > '(' >> indexed_column%',' >> ')' >> -conflict_clause)
             |   (CHECK > '(' > expr > ')')
             |   (FOREIGN > KEY > '(' > column_name%',' > ')' > foreign_key_clause)
             )
@@ -165,9 +165,14 @@ struct SqlGrammar : qi::grammar<Iterator, Skipper>
         ;
 
     rule table_clause =
-            -(database_name >> '.') >> table_name
+            composite_table_name
         >>  -( -AS >> table_alias)
         >>  -index_clause
+        ;
+
+
+    rule composite_table_name =
+            -(database_name >> '.') >> table_name
         ;
 
     rule index_clause =
@@ -215,7 +220,7 @@ struct SqlGrammar : qi::grammar<Iterator, Skipper>
         ;
 
     rule qualified_table_name =
-            -(database_name >> '.') >> table_name >> -index_clause
+            composite_table_name >> -index_clause
         ;
 
     rule update_limited_clause =
@@ -278,12 +283,17 @@ struct SqlGrammar : qi::grammar<Iterator, Skipper>
             literal_value
         |   bind_parameter
         |   (function_name >> '(' > -( '*'| -DISTINCT >> expr%','))
-        |   database_name >> '.' >> table_name >> '.' >> column_name // todo: make more efficient
-        |   table_name >> '.' >> column_name
-        |   column_name
+        |   composite_column_name
         |   '(' >> expr >> ')'
         |   ('-' >> factor)
         |   ('+' >> factor)
+        ;
+
+    // todo: make more efficient
+    rule composite_column_name =
+            database_name >> '.' >> table_name >> '.' >> column_name
+        |   table_name >> '.' >> column_name
+        |   column_name
         ;
 
     rule bind_parameter =
