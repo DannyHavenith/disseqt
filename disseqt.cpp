@@ -51,7 +51,6 @@ struct SqlGrammar : qi::grammar<Iterator, Skipper>
                 (AS > select_stmt)
             |   ('(' >> column_def%',' >> -(table_constraint%',') > ')' >> -( WITHOUT >> ROWID))
             )
-
         ;
 
     rule column_def =
@@ -63,11 +62,11 @@ struct SqlGrammar : qi::grammar<Iterator, Skipper>
         ;
 
     rule column_constraint =
-            -(CONSTRAINT > identifier)
+            -(CONSTRAINT > name)
         >>  (
-                (PRIMARY > KEY > -(ASC|DESC) >> conflict_clause >> -AUTOINCREMENT)
-            |   (NOT > NULL > conflict_clause)
-            |   (UNIQUE > conflict_clause)
+                (PRIMARY > KEY > -(ASC|DESC) >> -conflict_clause >> -AUTOINCREMENT)
+            |   (NOT > NULL > -conflict_clause)
+            |   (UNIQUE > -conflict_clause)
             |   (CHECK > '(' > expr > ')')
             |   (DEFAULT > (qi::int_|literal_value| ('(' > expr > ')')))
             |   (COLLATE > collation_name)
@@ -85,12 +84,46 @@ struct SqlGrammar : qi::grammar<Iterator, Skipper>
         |   CURRENT_TIMESTAMP
         ;
 
-    rule numeric_literal;
-    rule string_literal;
-    rule blob_literal;
-    rule conflict_clause;
-    rule foreign_key_clause;
-    rule table_constraint;
+    // in the syntax spec for SQLite, this one has an empty alternative, this has been
+    // removed and the conflict clause itself has become optional in all rules that use it.
+    rule conflict_clause =
+            ON > CONFLICT > (ROLLBACK|ABORT|FAIL|IGNORE|REPLACE)
+        ;
+
+    rule foreign_key_clause =
+            REFERENCES >> foreign_table >> -( '(' > column_name%',' > ')')
+        >>  *(
+                (ON > (DELETE|UPDATE) > (SET >> NULL | SET >> DEFAULT | CASCADE | RESTRICT | NO >> ACTION))
+            |   (MATCH >> name)
+            )
+        >>  -(-NOT >> DEFERRABLE >> -(INITIALLY >> (DEFERRED|IMMEDIATE)))
+        ;
+
+    rule table_constraint =
+            -(CONSTRAINT > name)
+        >>  (
+                ((PRIMARY >> KEY|UNIQUE) > '(' >> indexed_column%',' >> ')' >> conflict_clause)
+            |   (CHECK > '(' > expr > ')')
+            |   (FOREIGN > KEY > '(' > column_name%',' > ')' > foreign_key_clause)
+            )
+        ;
+
+    rule indexed_column =
+            column_name >> -(COLLATE > collation_name) >> -(ASC|DESC)
+        ;
+
+    rule numeric_literal =
+            (+digit || '.' >> *digit) >> -( 'E' > -(char_('+')|'-') > +digit)
+        |   "0x" >> +xdigit;
+        ;
+
+    rule string_literal =
+            '\'' >> lexeme[char_ - '\''] >> '\''
+        ;
+
+    rule blob_literal =
+            no_case['x'] >> string_literal
+        ;
 
     rule select_stmt =
             -with_clause
@@ -109,8 +142,8 @@ struct SqlGrammar : qi::grammar<Iterator, Skipper>
 
 
     rule select_phrase =
-            SELECT > -(DISTINCT|ALL) > result_column % ','
-        >>  -(FROM > (join_clause| table_or_subquery %','))
+            SELECT > -(DISTINCT|ALL) > result_column%','
+        >>  -(FROM > (join_clause| table_or_subquery%','))
         >>  -(WHERE > expr)
         >>  -(GROUP > BY > expr % ',' > -(HAVING > expr))
         ;
@@ -200,40 +233,104 @@ struct SqlGrammar : qi::grammar<Iterator, Skipper>
             )
         ;
 
-    // TODO: finish, this is just a quick implementation of expressions
+     // TODO: finish, this is just a quick implementation of expressions
     rule expr =
+            or_oper >> *( OR > or_oper)
+        ;
+
+    rule or_oper =
+            and_oper >> *( AND > and_oper)
+        ;
+
+    rule and_oper =
+            compare_oper >> *(comparison_operator >> compare_oper)
+        ;
+
+    rule comparison_operator =
+            lit("==") | "=" | "!=" |  "<>" | IS >> NOT | IS | IN | LIKE | GLOB | MATCH | REGEXP
+        ;
+
+    rule compare_oper =
+            ineq_oper >> *( ineq_operator >> ineq_oper)
+        ;
+
+    rule ineq_operator =
+            lit("<=") | '<' | ">=" | '>'
+        ;
+
+    rule ineq_oper =
+            bitwise_oper >> *(bitwise_operator >> bitwise_oper)
+        ;
+
+    rule bitwise_operator =
+            lit("<<") | ">>" | '&' | '|'
+        ;
+
+    rule bitwise_oper =
             term >>  *('+' >> term |'-' >> term)
         ;
 
     rule term =
            factor >> *( '*' >> factor | '/' >> factor)
-       ;
+        ;
 
     rule factor =
-           uint_
-           |   '(' >> expr >> ')'
-           |   ('-' >> factor)
-           |   ('+' >> factor)
-           ;
+            literal_value
+        |   bind_parameter
+        |   (function_name >> '(' > -( '*'| -DISTINCT >> expr%','))
+        |   database_name >> '.' >> table_name >> '.' >> column_name // todo: make more efficient
+        |   table_name >> '.' >> column_name
+        |   column_name
+        |   '(' >> expr >> ')'
+        |   ('-' >> factor)
+        |   ('+' >> factor)
+        ;
 
-    rule index_name = identifier
+    rule bind_parameter =
+            lexeme[ char_('?') >> *digit]
+        |   lexeme[ char_(':') >> (alpha|char_('_')) >> *(alnum|char_('_'))]
+        |   lexeme[ char_('$') >> ((alpha|char_('_')) >> *(alnum|char_('_')))%"::" >> -( '(' >> *(char_ - ')') >> ')')]
         ;
-    rule table_name = identifier
+
+    rule function_name = identifier
         ;
-    rule database_name = identifier
+    rule foreign_table = name
         ;
-    rule collation_name = identifier
+    rule index_name = name
         ;
-    rule column_name = identifier
+    rule table_name = name
         ;
-    rule table_alias = identifier
+    rule database_name = name
         ;
-    rule column_alias = identifier
+    rule collation_name = name
         ;
+    rule column_name = name
+        ;
+    rule table_alias = name
+        ;
+    rule column_alias = name
+        ;
+
     rule identifier =
             (alpha|char_('_')) >> *(alnum|char_('_'))
         ;
 
+    rule tcl_identifier =
+            (alpha|char_('_')) >> *(alnum|char_('_'))%"::" >> -( '(' >> *(char_ - ')') >> ')')
+        ;
+
+    // names can be bare identifiers, but also be quoted.
+    rule name =
+            identifier
+        ;
+
+
+    KEYWORD(IS);
+    KEYWORD(IN);
+    KEYWORD(LIKE);
+    KEYWORD(GLOB);
+    KEYWORD(REGEXP);
+    KEYWORD(FOREIGN);
     KEYWORD(ON);
     KEYWORD(USING);
     KEYWORD(NATURAL);
@@ -295,6 +392,19 @@ struct SqlGrammar : qi::grammar<Iterator, Skipper>
     KEYWORD(CURRENT_TIME);
     KEYWORD(CURRENT_DATE);
     KEYWORD(CURRENT_TIMESTAMP);
+    KEYWORD(CONFLICT);
+    KEYWORD(CASCADE);
+    KEYWORD(RESTRICT);
+    KEYWORD(NO);
+    KEYWORD(ACTION);
+    KEYWORD(MATCH);
+    KEYWORD(DEFERRABLE);
+    KEYWORD(INITIALLY);
+    KEYWORD(DEFERRED);
+    KEYWORD(IMMEDIATE);
+    KEYWORD(DELETE);
+    KEYWORD(REFERENCES);
+    KEYWORD(AND);
 };
 
 template< typename Iterator, typename Skipper>
