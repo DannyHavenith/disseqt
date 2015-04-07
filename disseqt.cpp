@@ -26,7 +26,6 @@ struct SqlGrammar : qi::grammar<Iterator, Skipper>
             =   sql_stmt % ';'
             ;
 
-
         sql_stmt =
                 explain_stmt
             |   stmt
@@ -46,7 +45,7 @@ struct SqlGrammar : qi::grammar<Iterator, Skipper>
         insert_stmt =
                 -with_clause
             >>  (REPLACE | INSERT >> -weasel_clause) >   INTO
-            >   composite_table_name >> '(' >> -(column_name%',') > ')'
+            >   composite_table_name >> -column_list
             >>  (
                     values_clause
                 |   select_stmt
@@ -102,7 +101,7 @@ struct SqlGrammar : qi::grammar<Iterator, Skipper>
             ;
 
         foreign_key_clause =
-                REFERENCES >> foreign_table >> -( '(' > column_name%',' > ')')
+                REFERENCES >> foreign_table >> -column_list
             >>  *(
                     (ON > (DELETE|UPDATE) > (SET >> NULL | SET >> DEFAULT | CASCADE | RESTRICT | NO >> ACTION))
                 |   (MATCH >> name)
@@ -115,7 +114,7 @@ struct SqlGrammar : qi::grammar<Iterator, Skipper>
             >>  (
                     ((PRIMARY >> KEY|UNIQUE) > '(' >> indexed_column%',' >> ')' >> -conflict_clause)
                 |   (CHECK > '(' > expr > ')')
-                |   (FOREIGN > KEY > '(' > column_name%',' > ')' > foreign_key_clause)
+                |   (FOREIGN > KEY > column_list > foreign_key_clause)
                 )
             ;
 
@@ -203,15 +202,20 @@ struct SqlGrammar : qi::grammar<Iterator, Skipper>
         // rule optional wherever it is used.
         join_constraint =
                 (ON > expr)
-            |   (USING > '(' > column_name%',' > ')')
+            |   (USING > column_list)
             ;
+
+        column_list =
+                '(' > column_name%',' > ')'
+            ;
+
 
         with_clause =
                 WITH > -RECURSIVE >> common_table_expression %','
             ;
 
         common_table_expression =
-                table_name >> -( '(' >> column_name%',' >> ')')
+                table_name >> -column_list
             >>  AS >> '(' >> select_stmt >> ')';
             ;
 
@@ -226,8 +230,8 @@ struct SqlGrammar : qi::grammar<Iterator, Skipper>
             ;
 
         update_stmt =
-                -with_clause >> UPDATE >> -weasel_clause >> qualified_table_name
-            >>  SET >> (column_name >> '=' > expr)%',' >> (WHERE > expr)
+                -with_clause >> UPDATE > -weasel_clause >> qualified_table_name
+            >   SET >> (column_name >> '=' > expr)%',' >> -(WHERE > expr)
             >>  -update_limited_clause
             ;
 
@@ -252,10 +256,10 @@ struct SqlGrammar : qi::grammar<Iterator, Skipper>
 
          // TODO: finish, this is just a quick implementation of expressions
         expr =
-                or_oper >> *( OR > or_oper)
+                or_operandand >> *( OR > or_operandand)
             ;
 
-        or_oper =
+        or_operandand =
                 and_oper >> *( AND > and_oper)
             ;
 
@@ -350,7 +354,6 @@ struct SqlGrammar : qi::grammar<Iterator, Skipper>
                 identifier.alias()
             ;
 
-
         KEYWORD(INSERT);
         KEYWORD(INTO);
         KEYWORD(IS);
@@ -437,6 +440,7 @@ struct SqlGrammar : qi::grammar<Iterator, Skipper>
 
     typedef qi::rule<Iterator, Skipper> rule;
 
+    rule column_list;
     rule insert_stmt;
     rule sql_stmt_list;
     rule sql_stmt;
@@ -476,7 +480,7 @@ struct SqlGrammar : qi::grammar<Iterator, Skipper>
     rule update_limited_clause;
     rule weasel_clause;
     rule expr;
-    rule or_oper;
+    rule or_operandand;
     rule and_oper;
     rule comparison_operator;
     rule compare_oper;
