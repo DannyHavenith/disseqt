@@ -19,12 +19,13 @@
 //#define BOOST_SPIRIT_DEBUG_INDENT 2
 //#endif
 
-#include <boost/spirit/include/qi.hpp>
-#include <boost/phoenix.hpp>
 #include <string>
 #include <iostream>
 #include <fstream>
+#include <boost/spirit/include/qi.hpp>
+//#include <boost/phoenix.hpp>
 
+#include "lexer.h"
 
 using namespace boost::spirit;
 using namespace boost::spirit::ascii;
@@ -322,8 +323,6 @@ struct SqlGrammar : qi::grammar<Iterator, Skipper>
             ;
         DISSEQT_DEBUG_NODE( weasel_clause);
 
-         // TODO: finish, this is just a quick implementation of expressions
-
         expr =
                 or_operand >> *( (OR-ORDER) >> or_operand) // really need tokenizer here.
             ;
@@ -477,17 +476,17 @@ struct SqlGrammar : qi::grammar<Iterator, Skipper>
             ;
         DISSEQT_DEBUG_NODE( name);
 
-        qi::on_error<qi::fail>
-                    (
-                        sql_stmt
-                      , std::cerr
-                            << ph::val("Error! Expecting ")
-                            << _4                               // what failed?
-                            << ph::val(" here: \"")
-                            << ph::construct<std::string>(_3, _2)   // iterators to error-pos, end
-                            << ph::val("\"")
-                            << std::endl
-                    );
+//        qi::on_error<qi::fail>
+//                    (
+//                        sql_stmt
+//                      , ph::ref( std::cerr)
+//                            << "Error! Expecting "
+//                            << _4                               // what failed?
+//                            << " here: \""
+//                            << ph::construct<std::string>(_3, _2)   // iterators to error-pos, end
+//                            << "\""
+//                            << std::endl
+//                    );
 
         KEYWORD(CAST);
         KEYWORD(ISNULL);
