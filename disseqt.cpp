@@ -44,11 +44,11 @@ struct SqlGrammar : qi::grammar<Iterator, Skipper>
 
         create_table_stmt =
                 CREATE >> -(TEMP|TEMPORARY) >> TABLE
-            >   -(IF >> NOT >> EXISTS)
+            >   -(IF > NOT > EXISTS)
             >>  composite_table_name
             >>  (
                     (AS > select_stmt)
-                |   ('(' >> column_def%',' >> -(table_constraint%',') > ')' >> -( WITHOUT >> ROWID))
+                |   ('(' >> column_def%',' >> -(table_constraint%',') > ')' >> -( WITHOUT > ROWID))
                 )
             ;
 
@@ -95,7 +95,7 @@ struct SqlGrammar : qi::grammar<Iterator, Skipper>
                     (ON > (DELETE|UPDATE) > (SET >> NULL | SET >> DEFAULT | CASCADE | RESTRICT | NO >> ACTION))
                 |   (MATCH >> name)
                 )
-            >>  -(-NOT >> DEFERRABLE >> -(INITIALLY >> (DEFERRED|IMMEDIATE)))
+            >>  -(-NOT >> DEFERRABLE >> -(INITIALLY > (DEFERRED|IMMEDIATE)))
             ;
 
         table_constraint =
@@ -179,7 +179,7 @@ struct SqlGrammar : qi::grammar<Iterator, Skipper>
             ;
 
         join_clause =
-                table_or_subquery >> *(join_operator >> table_or_subquery >> join_constraint)
+                table_or_subquery >> *(join_operator >> table_or_subquery >> -join_constraint)
             ;
 
         join_operator =
@@ -187,10 +187,11 @@ struct SqlGrammar : qi::grammar<Iterator, Skipper>
             |   -NATURAL >> -( LEFT >> -OUTER | INNER | CROSS) >> JOIN
             ;
 
+        // officially contains an empty (epsilon) alternative, but instead we're making this
+        // rule optional wherever it is used.
         join_constraint =
-                ON >> expr
-            |   USING >> '(' >> column_name%',' >> ')'
-            |   qi::eps
+                (ON > expr)
+            |   (USING > '(' > column_name%',' > ')')
             ;
 
         with_clause =
