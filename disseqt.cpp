@@ -117,7 +117,7 @@ struct SqlGrammar : qi::grammar<Iterator, Skipper>
             ;
 
         string_literal =
-                '\'' >> lexeme[char_ - '\''] >> '\''
+                '\'' >> lexeme[*(char_ - '\'')] >> '\''
             ;
 
         blob_literal =
@@ -276,17 +276,21 @@ struct SqlGrammar : qi::grammar<Iterator, Skipper>
             ;
 
         term =
-               factor >> *( '*' >> factor | '/' >> factor)
+               factor >> *( '*' >> factor | '/' >> factor | '%' >> factor)
             ;
 
         factor =
+                singular >> *( "||" >> singular)
+            ;
+
+        singular =
                 literal_value
             |   bind_parameter
             |   (function_name >> '(' > -( '*'| -DISTINCT >> expr%','))
             |   composite_column_name
             |   '(' >> expr >> ')'
-            |   ('-' >> factor)
-            |   ('+' >> factor)
+            |   ('-' >> singular)
+            |   ('+' >> singular)
             ;
 
         // todo: make more efficient
@@ -420,67 +424,68 @@ struct SqlGrammar : qi::grammar<Iterator, Skipper>
     typedef qi::rule<Iterator, Skipper> rule;
 
     rule sql_stmt_list;
-    rule sql_stmt ;
-    rule explain_stmt ;
-    rule stmt ;
-    rule create_table_stmt ;
-    rule column_def ;
-    rule type_name ;
-    rule column_constraint ;
-    rule literal_value ;
-    rule conflict_clause ;
-    rule foreign_key_clause ;
-    rule table_constraint ;
-    rule indexed_column ;
-    rule numeric_literal ;
-    rule string_literal ;
-    rule blob_literal ;
-    rule select_stmt ;
-    rule order_by_clause ;
-    rule limit_clause ;
-    rule select_phrase ;
-    rule result_column ;
-    rule values_clause ;
-    rule table_or_subquery ;
-    rule table_clause ;
-    rule composite_table_name ;
-    rule index_clause ;
-    rule join_clause ;
-    rule join_operator ;
-    rule join_constraint ;
-    rule with_clause ;
-    rule common_table_expression ;
-    rule compound_operator ;
-    rule ordering_term ;
-    rule update_stmt ;
-    rule qualified_table_name ;
-    rule update_limited_clause ;
-    rule weasel_clause ;
-    rule expr ;
-    rule or_oper ;
-    rule and_oper ;
-    rule comparison_operator ;
-    rule compare_oper ;
-    rule ineq_operator ;
-    rule ineq_oper ;
-    rule bitwise_operator ;
-    rule bitwise_oper ;
-    rule term ;
-    rule factor ;
-    rule composite_column_name ;
-    rule bind_parameter ;
-    rule function_name ;
-    rule foreign_table ;
-    rule index_name ;
-    rule table_name ;
-    rule database_name ;
-    rule collation_name ;
-    rule column_name ;
-    rule table_alias ;
-    rule column_alias ;
-    rule identifier ;
-    rule tcl_identifier ;
-    rule name ;
+    rule sql_stmt;
+    rule explain_stmt;
+    rule stmt;
+    rule create_table_stmt;
+    rule column_def;
+    rule type_name;
+    rule column_constraint;
+    rule literal_value;
+    rule conflict_clause;
+    rule foreign_key_clause;
+    rule table_constraint;
+    rule indexed_column;
+    rule numeric_literal;
+    rule string_literal;
+    rule blob_literal;
+    rule select_stmt;
+    rule order_by_clause;
+    rule limit_clause;
+    rule select_phrase;
+    rule result_column;
+    rule values_clause;
+    rule table_or_subquery;
+    rule table_clause;
+    rule composite_table_name;
+    rule index_clause;
+    rule join_clause;
+    rule join_operator;
+    rule join_constraint;
+    rule with_clause;
+    rule common_table_expression;
+    rule compound_operator;
+    rule ordering_term;
+    rule update_stmt;
+    rule qualified_table_name;
+    rule update_limited_clause;
+    rule weasel_clause;
+    rule expr;
+    rule or_oper;
+    rule and_oper;
+    rule comparison_operator;
+    rule compare_oper;
+    rule ineq_operator;
+    rule ineq_oper;
+    rule bitwise_operator;
+    rule bitwise_oper;
+    rule term;
+    rule singular;
+    rule factor;
+    rule composite_column_name;
+    rule bind_parameter;
+    rule function_name;
+    rule foreign_table;
+    rule index_name;
+    rule table_name;
+    rule database_name;
+    rule collation_name;
+    rule column_name;
+    rule table_alias;
+    rule column_alias;
+    rule identifier;
+    rule tcl_identifier;
+    rule name;
 
 
     DECL_KEYWORD(IS);
@@ -572,6 +577,32 @@ bool phrase_parse( Iterator first, Iterator last, const Skipper &skipper)
     return qi::phrase_parse( first, last, g, skipper);
 }
 
+struct printer
+{
+    typedef boost::spirit::utf8_string string;
+
+    void element(string const& tag, string const& value, int depth) const
+    {
+        for (int i = 0; i < (depth*4); ++i) // indent to depth
+            std::cout << ' ';
+
+        std::cout << "tag: " << tag;
+        if (value != "")
+            std::cout << ", value: " << value;
+        std::cout << std::endl;
+    }
+};
+
+void print_info(boost::spirit::info const& what)
+{
+    using boost::spirit::basic_info_walker;
+
+    printer pr;
+    basic_info_walker<printer> walker(pr, what.tag, 0);
+    boost::apply_visitor(walker, what.value);
+}
+
+
 void test( const std::string &filename)
 {
     std::string buffer;
@@ -590,6 +621,14 @@ void test( const std::string &filename)
             {
                 ++count;
             }
+        }
+        catch ( qi::expectation_failure<std::string::const_iterator> &e)
+        {
+            std::cerr << "***\n";
+            std::cerr << "expectation failure:\n";
+            std::cerr << std::string( buffer.cbegin(), e.first) << '\n';
+            std::cerr << "<HERE>\n";
+            std::cerr << std::string( e.first, e.last) << '\n';
         }
         catch (std::exception &e)
         {
