@@ -40,6 +40,18 @@ struct SqlGrammar : qi::grammar<Iterator, Skipper>
                 update_stmt
             |   select_stmt
             |   create_table_stmt
+            |   insert_stmt
+            ;
+
+        insert_stmt =
+                -with_clause
+            >>  (REPLACE | INSERT >> -weasel_clause) >   INTO
+            >   composite_table_name >> '(' >> -(column_name%',') > ')'
+            >>  (
+                    values_clause
+                |   select_stmt
+                |   (DEFAULT > VALUES)
+                )
             ;
 
         create_table_stmt =
@@ -339,6 +351,8 @@ struct SqlGrammar : qi::grammar<Iterator, Skipper>
             ;
 
 
+        KEYWORD(INSERT);
+        KEYWORD(INTO);
         KEYWORD(IS);
         KEYWORD(IN);
         KEYWORD(LIKE);
@@ -423,6 +437,7 @@ struct SqlGrammar : qi::grammar<Iterator, Skipper>
 
     typedef qi::rule<Iterator, Skipper> rule;
 
+    rule insert_stmt;
     rule sql_stmt_list;
     rule sql_stmt;
     rule explain_stmt;
@@ -487,7 +502,8 @@ struct SqlGrammar : qi::grammar<Iterator, Skipper>
     rule tcl_identifier;
     rule name;
 
-
+    DECL_KEYWORD(INSERT);
+    DECL_KEYWORD(INTO);
     DECL_KEYWORD(IS);
     DECL_KEYWORD(IN);
     DECL_KEYWORD(LIKE);
