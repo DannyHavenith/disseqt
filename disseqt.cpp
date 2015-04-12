@@ -404,6 +404,7 @@ struct SqlGrammar : qi::grammar<Iterator, Skipper>
             |   '(' >> expr >> ')'
             |   ('-' >> singular)
             |   ('+' >> singular)
+            |   ('~' >> singular)
             ;
         DISSEQT_DEBUG_NODE( singular);
 
@@ -819,14 +820,14 @@ void test( const std::string &filename)
 /*
  *
  */
-int main(int argc, char** argv)
-{
-
-    if (argc > 1)
-    {
-        test( argv[1]);
-    }
-
-    return 0;
-}
+//int main(int argc, char** argv)
+//{
+//
+//    if (argc > 1)
+//    {
+//        test( argv[1]);
+//    }
+//
+//    return 0;
+//}
 

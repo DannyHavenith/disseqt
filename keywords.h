@@ -8,7 +8,7 @@
 #ifndef DISSEQT_KEYWORDS_H_
 #define DISSEQT_KEYWORDS_H_
 
-#undef NULL
+
 #define DISSEQT_KEYWORDS \
         (ISNULL)\
         (NOTNULL)\
@@ -70,7 +70,6 @@
         (UNIQUE)\
         (CHECK)\
         (DEFAULT)\
-        (NULL)\
         (CURRENT_TIME)\
         (CURRENT_DATE)\
         (CURRENT_TIMESTAMP)\
