@@ -26,6 +26,7 @@ struct test_grammar : qi::grammar<Iterator>
 
         start =  *(     tok.SELECT        [++ref(w), ref(c) += size(_1)]
                   |     '('
+                  |     tok.STRING        [ std::cout << _1 << '\n']
                   )
               ;
 
@@ -36,9 +37,9 @@ struct test_grammar : qi::grammar<Iterator>
 };
 
 
-int main( int argc, char *argv[])
+int test_lexer( int argc, char *argv[])
 {
-    std::string test{"SELECT !=     ()*^/* commenting/* * ***/'this is a \"string'.'and this\" is another string' \"plus yet 'another\\\" string\""};
+    std::string test{"SELecT != ?123:abc$efg::hij::kl(sfio\")@mno     ()*^/* commenting/* * ***/'this is a \"string'.'and this\" is another string' \"plus yet 'another\\\" string\""};
 
     typedef std::string::const_iterator iterator_type;
     using namespace boost::spirit::lex;

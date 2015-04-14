@@ -43,11 +43,11 @@
 							</tool>
 						</toolChain>
 					</folderInfo>
-					<fileInfo id="cdt.managedbuild.config.gnu.exe.debug.1111553780.1509251323" name="disseqt.cpp" rcbsApplicability="disable" resourcePath="disseqt.cpp" toolsToInvoke="cdt.managedbuild.tool.gnu.cpp.compiler.exe.debug.1377442769.906859390">
-						<tool command="g++" commandLinePattern="${COMMAND} ${FLAGS} ${OUTPUT_FLAG} ${OUTPUT_PREFIX}${OUTPUT} ${INPUTS}" id="cdt.managedbuild.tool.gnu.cpp.compiler.exe.debug.1377442769.906859390" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.exe.debug.1377442769"/>
+					<fileInfo id="cdt.managedbuild.config.gnu.exe.debug.1111553780.276951369" name="disseqt.cpp" rcbsApplicability="disable" resourcePath="disseqt.cpp" toolsToInvoke="cdt.managedbuild.tool.gnu.cpp.compiler.exe.debug.1377442769.1352275758">
+						<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.exe.debug.1377442769.1352275758" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.exe.debug.1377442769"/>
 					</fileInfo>
 					<sourceEntries>
-						<entry excluding="disseqt.cpp" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -94,11 +94,11 @@
 							</tool>
 						</toolChain>
 					</folderInfo>
-					<fileInfo id="cdt.managedbuild.config.gnu.exe.release.1073104276.1340729019" name="disseqt.cpp" rcbsApplicability="disable" resourcePath="disseqt.cpp" toolsToInvoke="cdt.managedbuild.tool.gnu.cpp.compiler.exe.release.1065075823.625260310">
-						<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.exe.release.1065075823.625260310" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.exe.release.1065075823"/>
+					<fileInfo id="cdt.managedbuild.config.gnu.exe.release.1073104276.1353564295" name="disseqt.cpp" rcbsApplicability="disable" resourcePath="disseqt.cpp" toolsToInvoke="cdt.managedbuild.tool.gnu.cpp.compiler.exe.release.1065075823.1858191979">
+						<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.exe.release.1065075823.1858191979" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.exe.release.1065075823"/>
 					</fileInfo>
 					<sourceEntries>
-						<entry excluding="disseqt.cpp" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>

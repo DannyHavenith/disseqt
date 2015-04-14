@@ -9,6 +9,9 @@
 #define DISSEQT_KEYWORDS_H_
 
 
+// All keywords understood by disseqts lexer, except for NULL, which needs some
+// special treatment because it's a C macro as well.
+// There are more terminals than just these keywords. These are handled in the lexer.
 #define DISSEQT_KEYWORDS \
         (ISNULL)\
         (NOTNULL)\
@@ -17,30 +20,17 @@
         (FOREIGN)\
         (USING)\
         (NATURAL)\
-        (CAST)\
-        (CASE)\
-        (WHEN)\
-        (THEN)\
-        (ELSE)\
-        (INTO)\
-        (LIKE)\
-        (GLOB)\
-        (LEFT)\
         (OUTER)\
         (INNER)\
         (CROSS)\
-        (JOIN)\
         (INDEXED)\
         (VALUES)\
         (GROUP)\
         (HAVING)\
         (SELECT)\
-        (FROM)\
         (WHERE)\
         (EXPLAIN)\
         (QUERY)\
-        (PLAN)\
-        (WITH)\
         (ORDER)\
         (LIMIT)\
         (DISTINCT)\
@@ -50,20 +40,16 @@
         (EXCEPT)\
         (UNION)\
         (COLLATE)\
-        (DESC)\
         (ROLLBACK)\
         (ABORT)\
         (REPLACE)\
-        (FAIL)\
         (IGNORE)\
         (UPDATE)\
         (CREATE)\
         (TABLE)\
-        (TEMP)\
         (TEMPORARY)\
         (EXISTS)\
         (WITHOUT)\
-        (ROWID)\
         (CONSTRAINT)\
         (PRIMARY)\
         (AUTOINCREMENT)\
@@ -85,6 +71,22 @@
         (DELETE)\
         (REFERENCES)\
         (BETWEEN)\
+        (JOIN)\
+        (FROM)\
+        (PLAN)\
+        (WITH)\
+        (DESC)\
+        (FAIL)\
+        (TEMP)\
+        (CAST)\
+        (CASE)\
+        (WHEN)\
+        (THEN)\
+        (ELSE)\
+        (INTO)\
+        (LIKE)\
+        (GLOB)\
+        (LEFT)\
         (NOT)\
         (END)\
         (KEY)\
