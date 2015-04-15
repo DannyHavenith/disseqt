@@ -10,11 +10,43 @@
 
 // keywords that can also appear as identifiers.
 #define DISSEQT_NONSPECIFIC_KEYWORDS \
+        (REGEXP)\
+        (OUTER)\
+        (INNER)\
+        (CROSS)\
+        (INDEXED)\
+        (NATURAL)\
+        (EXPLAIN)\
+        (QUERY)\
+        (OFFSET)\
+        (RECURSIVE)\
+        (ROLLBACK)\
+        (TEMPORARY)\
+        (WITHOUT)\
+        (CONFLICT)\
+        (CASCADE)\
+        (RESTRICT)\
+        (ACTION)\
+        (INITIALLY)\
+        (DEFERRED)\
+        (IMMEDIATE)\
+        (PLAN)\
+        (WITH)\
+        (DESC)\
+        (FAIL)\
+        (TEMP)\
+        (LIKE)\
+        (GLOB)\
+        (END)\
+        (KEY)\
+        (ASC)\
         (ABORT)\
         (REPLACE)\
         (IGNORE)\
         (MATCH)\
         (LEFT)\
+        (BY)\
+        (IF)\
         (NO)\
         /**/
 
@@ -25,37 +57,24 @@
         (ISNULL)\
         (NOTNULL)\
         (INSERT)\
-        (REGEXP)\
         (FOREIGN)\
         (USING)\
-        (NATURAL)\
-        (OUTER)\
-        (INNER)\
-        (CROSS)\
-        (INDEXED)\
         (VALUES)\
         (GROUP)\
         (HAVING)\
         (SELECT)\
         (WHERE)\
-        (EXPLAIN)\
-        (QUERY)\
         (ORDER)\
         (LIMIT)\
         (DISTINCT)\
-        (OFFSET)\
-        (RECURSIVE)\
         (INTERSECT)\
         (EXCEPT)\
         (UNION)\
         (COLLATE)\
-        (ROLLBACK)\
         (UPDATE)\
         (CREATE)\
         (TABLE)\
-        (TEMPORARY)\
         (EXISTS)\
-        (WITHOUT)\
         (CONSTRAINT)\
         (PRIMARY)\
         (AUTOINCREMENT)\
@@ -65,46 +84,27 @@
         (CURRENT_TIME)\
         (CURRENT_DATE)\
         (CURRENT_TIMESTAMP)\
-        (CONFLICT)\
-        (CASCADE)\
-        (RESTRICT)\
-        (ACTION)\
         (DEFERRABLE)\
-        (INITIALLY)\
-        (DEFERRED)\
-        (IMMEDIATE)\
         (DELETE)\
         (REFERENCES)\
         (BETWEEN)\
         (JOIN)\
         (FROM)\
-        (PLAN)\
-        (WITH)\
-        (DESC)\
-        (FAIL)\
-        (TEMP)\
         (CAST)\
         (CASE)\
         (WHEN)\
         (THEN)\
         (ELSE)\
         (INTO)\
-        (LIKE)\
-        (GLOB)\
         (NOT)\
-        (END)\
-        (KEY)\
         (AND)\
         (SET)\
         (ALL)\
-        (ASC)\
         (ON)\
         (AS)\
-        (BY)\
         (OR)\
         (IS)\
         (IN)\
-        (IF)\
         DISSEQT_NONSPECIFIC_KEYWORDS\
         /**/
 
