@@ -8,6 +8,15 @@
 #ifndef DISSEQT_KEYWORDS_H_
 #define DISSEQT_KEYWORDS_H_
 
+// keywords that can also appear as identifiers.
+#define DISSEQT_NONSPECIFIC_KEYWORDS \
+        (ABORT)\
+        (REPLACE)\
+        (IGNORE)\
+        (MATCH)\
+        (LEFT)\
+        (NO)\
+        /**/
 
 // All keywords understood by disseqts lexer, except for NULL, which needs some
 // special treatment because it's a C macro as well.
@@ -41,9 +50,6 @@
         (UNION)\
         (COLLATE)\
         (ROLLBACK)\
-        (ABORT)\
-        (REPLACE)\
-        (IGNORE)\
         (UPDATE)\
         (CREATE)\
         (TABLE)\
@@ -63,7 +69,6 @@
         (CASCADE)\
         (RESTRICT)\
         (ACTION)\
-        (MATCH)\
         (DEFERRABLE)\
         (INITIALLY)\
         (DEFERRED)\
@@ -86,7 +91,6 @@
         (INTO)\
         (LIKE)\
         (GLOB)\
-        (LEFT)\
         (NOT)\
         (END)\
         (KEY)\
@@ -100,8 +104,8 @@
         (OR)\
         (IS)\
         (IN)\
-        (NO)\
         (IF)\
+        DISSEQT_NONSPECIFIC_KEYWORDS\
         /**/
 
 

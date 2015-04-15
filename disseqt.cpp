@@ -42,6 +42,7 @@ using namespace boost::spirit::ascii;
 #define KEYWORD( kw_) kw_ = lexeme[no_case[lit(#kw_)]]; DISSEQT_DEBUG_NODE( kw_)
 #define DECL_KEYWORD( kw_ ) rule kw_
 
+#define DISSEQT_PARSER_KEYWORD_ALTERNATIVE( r, type, keyword) |  t.keyword
 
 template< typename Iterator, typename Skipper>
 struct SqlGrammar : qi::grammar<Iterator, Skipper>
@@ -94,7 +95,7 @@ struct SqlGrammar : qi::grammar<Iterator, Skipper>
             >>  composite_table_name
             >>  (
                     (t.AS > select_stmt)
-                |   ('(' >> column_def%',' >> -(table_constraint%',') > ')' >> -( t.WITHOUT > t.IDENTIFIER))
+                |   ('(' >> column_def%',' >> -(',' >> table_constraint%',') > ')' >> -( t.WITHOUT > t.IDENTIFIER))
                 )
             ;
         DISSEQT_DEBUG_NODE( create_table_stmt);
@@ -341,6 +342,7 @@ struct SqlGrammar : qi::grammar<Iterator, Skipper>
 
         comparison_rhs =
                 comparison_operator >> compare_operand
+            |   t.COLLATE >> collation_name
             |   -t.NOT >> t.BETWEEN >> compare_operand >> t.AND >> compare_operand
             |   t.ISNULL
             |   t.NOTNULL
@@ -353,7 +355,7 @@ struct SqlGrammar : qi::grammar<Iterator, Skipper>
         DISSEQT_DEBUG_NODE( comparison_rhs);
 
         comparison_operator =
-                t.EQ_OP | "=" | t.NEQ_OP | t.IS >> t.NOT | t.IS | t.LIKE | t.GLOB | t.MATCH | t.REGEXP
+                t.EQ_OP | "=" | t.NEQ_OP | t.IS >> t.NOT | t.IS | -t.NOT >> t.LIKE | t.GLOB | t.MATCH | t.REGEXP
             ;
 
         DISSEQT_DEBUG_NODE( comparison_operator);
@@ -406,12 +408,12 @@ struct SqlGrammar : qi::grammar<Iterator, Skipper>
             |   ('-' >> singular)
             |   ('+' >> singular)
             |   ('~' >> singular)
-
+            |   (t.NOT >> singular)
             ;
         DISSEQT_DEBUG_NODE( singular);
 
         signed_number =
-                (lit('-')|'+') >> t.NUMERIC_LITERAL
+                -(lit('-')|'+') >> t.NUMERIC_LITERAL
             ;
         DISSEQT_DEBUG_NODE( signed_number);
 
@@ -428,7 +430,9 @@ struct SqlGrammar : qi::grammar<Iterator, Skipper>
             ;
         DISSEQT_DEBUG_NODE( bind_parameter);
 
-        function_name =  name.alias()
+        // all keywords are also valid function names in sqlite apparently.
+        function_name =
+                name.alias()
             ;
         DISSEQT_DEBUG_NODE( function_name);
 
@@ -465,11 +469,13 @@ struct SqlGrammar : qi::grammar<Iterator, Skipper>
         DISSEQT_DEBUG_NODE( column_alias);
 
         // names can be bare identifiers, but also be quoted.
-        // this would be a lot simpler (and faster) if we'd use a tokenizer.
         name =
                 t.IDENTIFIER
-            ;
+            |   t.STRING
+                BOOST_PP_SEQ_FOR_EACH( DISSEQT_PARSER_KEYWORD_ALTERNATIVE, _, DISSEQT_NONSPECIFIC_KEYWORDS)
+           ;
         DISSEQT_DEBUG_NODE( name);
+
 
 //        qi::on_error<qi::fail>
 //                    (
@@ -554,12 +560,11 @@ struct SqlGrammar : qi::grammar<Iterator, Skipper>
     rule column_alias;
     rule name;
 
-
 };
 
 
 template< typename Iterator>
-bool phrase_parse( Iterator first, Iterator last)
+bool phrase_parse( Iterator &first, Iterator last)
 {
     using namespace boost::spirit::lex;
 
@@ -572,7 +577,26 @@ bool phrase_parse( Iterator first, Iterator last)
     auto skipper = l.WHITESPACE | l.COMMENT;
     SqlGrammar<lexer_iterator_type, decltype(skipper)> g(l);
 
-    return tokenize_and_phrase_parse( first, last, l, g, skipper);
+    try
+    {
+        return tokenize_and_phrase_parse( first, last, l, g, skipper, boost::spirit::qi::skip_flag::postskip);
+    }
+    catch ( qi::expectation_failure<lexer_iterator_type> &e)
+    {
+        std::cerr << "***\n";
+        std::cerr << "expectation failure:\n";
+        auto it = e.first;
+        auto count = 10;
+
+        while (count-- && it != e.last)
+        {
+            std::cerr << it->value();
+            ++it;
+        }
+        std::cerr << "\n";
+        return false;
+    }
+
 }
 
 struct printer
@@ -603,6 +627,7 @@ void print_info(boost::spirit::info const& what)
 
 void test( const std::string &filename)
 {
+
     std::string buffer;
     std::ifstream inputfile( filename);
 
@@ -612,11 +637,14 @@ void test( const std::string &filename)
     {
         try
         {
-            if (!phrase_parse( buffer.cbegin(), buffer.cend()))
+            auto first = buffer.cbegin();
+            if (!phrase_parse( first, buffer.cend()) || first != buffer.cend())
             {
                 ++failed;
                 std::cout << "**********\n";
                 std::cout << buffer << '\n';
+                std::cout << "**********\n";
+                std::cout << std::string(first, buffer.cend())<< '\n';
                 std::cout << "**********\n";
             }
             else
