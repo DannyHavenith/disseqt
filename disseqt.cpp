@@ -5,20 +5,6 @@
  * Created on April 4, 2015, 11:31 PM
  */
 
-//#if !defined(BOOST_SPIRIT_DEBUG_OUT)
-//#define BOOST_SPIRIT_DEBUG_OUT std::cerr
-//#endif
-//
-////  number of tokens to print while debugging
-//#if !defined(BOOST_SPIRIT_DEBUG_PRINT_SOME)
-//#define BOOST_SPIRIT_DEBUG_PRINT_SOME 20
-//#endif
-//
-////  number of spaces to indent
-//#if !defined(BOOST_SPIRIT_DEBUG_INDENT)
-//#define BOOST_SPIRIT_DEBUG_INDENT 2
-//#endif
-
 #include <string>
 #include <iostream>
 #include <fstream>
@@ -38,9 +24,6 @@ using namespace boost::spirit::ascii;
 #else
 #    define DISSEQT_DEBUG_NODE( node_) node_.name( #node_)
 #endif
-
-#define KEYWORD( kw_) kw_ = lexeme[no_case[lit(#kw_)]]; DISSEQT_DEBUG_NODE( kw_)
-#define DECL_KEYWORD( kw_ ) rule kw_
 
 #define DISSEQT_PARSER_KEYWORD_ALTERNATIVE( r, type, keyword) |  t.keyword
 
@@ -172,7 +155,6 @@ struct SqlGrammar : qi::grammar<Iterator, Skipper>
                 t.NUMERIC_LITERAL
             ;
         DISSEQT_DEBUG_NODE( numeric_literal);
-            ;
 
         string_literal =
                 t.STRING
@@ -208,13 +190,12 @@ struct SqlGrammar : qi::grammar<Iterator, Skipper>
             >>  -(t.WHERE > expr)
             >>  -(t.GROUP > t.BY > expr % ',' > -(t.HAVING > expr))
             ;
-
         DISSEQT_DEBUG_NODE( select_phrase);
 
         result_column =
                 '*'
-            |   expr >> -( -t.AS >> column_alias)
             |   table_name >> '.' >> '*'
+            |   expr >> -( -t.AS >> column_alias)
             ;
         DISSEQT_DEBUG_NODE( result_column);
 
@@ -240,7 +221,6 @@ struct SqlGrammar : qi::grammar<Iterator, Skipper>
         composite_table_name =
                 -(database_name >> '.') >> table_name
             ;
-
         DISSEQT_DEBUG_NODE( composite_table_name);
 
         index_clause =
@@ -265,7 +245,8 @@ struct SqlGrammar : qi::grammar<Iterator, Skipper>
         join_constraint =
                 (t.ON > expr)
             |   (t.USING > column_list)
-            ;        DISSEQT_DEBUG_NODE( join_constraint);
+            ;
+        DISSEQT_DEBUG_NODE( join_constraint);
 
         column_list =
                 '(' > column_name%',' > ')'
@@ -275,14 +256,13 @@ struct SqlGrammar : qi::grammar<Iterator, Skipper>
         with_clause =
                 t.WITH > -t.RECURSIVE >> common_table_expression %','
             ;
-
         DISSEQT_DEBUG_NODE( with_clause);
 
         common_table_expression =
                 table_name >> -column_list
-            >>  t.AS >> '(' >> select_stmt >> ')';
-        DISSEQT_DEBUG_NODE( common_table_expression);
+            >>  t.AS >> '(' >> select_stmt >> ')'
             ;
+        DISSEQT_DEBUG_NODE( common_table_expression);
 
         compound_operator =
                 t.UNION >> -t.ALL
@@ -357,7 +337,6 @@ struct SqlGrammar : qi::grammar<Iterator, Skipper>
         comparison_operator =
                 t.EQ_OP | "=" | t.NEQ_OP | t.IS >> t.NOT | t.IS | -t.NOT >> t.LIKE | t.GLOB | t.MATCH | t.REGEXP
             ;
-
         DISSEQT_DEBUG_NODE( comparison_operator);
 
         compare_operand =
@@ -397,7 +376,7 @@ struct SqlGrammar : qi::grammar<Iterator, Skipper>
 
         singular =
                 (-t.NOT >> t.EXISTS > '(' >> select_stmt >> ')')
-            |   (t.CASE > -expr >> +(t.WHEN > expr >> t.THEN > expr) >> -(t.ELSE > expr) >> t.END)
+            |   (t.CASE > -(expr) >> +(t.WHEN > expr >> t.THEN > expr) >> -(t.ELSE > expr) >> t.END)
             |   (t.CAST > '(' > expr > t.AS > type_name > ')')
             |   literal_value
             |   bind_parameter
@@ -476,20 +455,6 @@ struct SqlGrammar : qi::grammar<Iterator, Skipper>
            ;
         DISSEQT_DEBUG_NODE( name);
 
-
-//        qi::on_error<qi::fail>
-//                    (
-//                        sql_stmt
-//                      , ph::ref( std::cerr)
-//                            << "Error! Expecting "
-//                            << _4                               // what failed?
-//                            << " here: \""
-//                            << ph::construct<std::string>(_3, _2)   // iterators to error-pos, end
-//                            << "\""
-//                            << std::endl
-//                    );
-
-
     }
 
     typedef qi::rule<Iterator, Skipper> rule;
@@ -559,7 +524,6 @@ struct SqlGrammar : qi::grammar<Iterator, Skipper>
     rule table_alias;
     rule column_alias;
     rule name;
-
 };
 
 
