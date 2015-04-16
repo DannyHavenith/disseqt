@@ -19,7 +19,6 @@ namespace disseqt
     {
         typedef LexerTypes<Iterator>                     Lex;
         typedef Lexer< typename Lex::base_lexer_type>    lexer_type;
-        typedef boost::spirit::lex::token_def<>          skipper;
     };
 
 

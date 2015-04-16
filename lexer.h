@@ -21,8 +21,8 @@ namespace disseqt {
     template< typename Iterator>
     struct LexerTypes
     {
-        typedef boost::mpl::vector<std::string>             value_types;
-        typedef lex::lexertl::token< Iterator, value_types> token_type;
+        // I want a token that holds an iterator pair
+        typedef lex::lexertl::token< Iterator>              token_type;
         typedef lex::lexertl::lexer< token_type>            base_lexer_type;
         typedef typename base_lexer_type::iterator_type     iterator_type;
     };
@@ -31,7 +31,7 @@ namespace disseqt {
     struct Lexer : boost::spirit::lex::lexer<L>
     {
         typedef boost::spirit::lex::token_def<> void_token_def;
-        typedef boost::spirit::lex::token_def<std::string> string_token_def;
+        typedef boost::spirit::lex::token_def<> string_token_def;
 
         Lexer();
 

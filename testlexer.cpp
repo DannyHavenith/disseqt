@@ -42,15 +42,14 @@ int test( int argc, char *argv[])
 {
     std::string test{"SELecT != ?123:abc$efg::hij::kl(sfio\")@mno     ()*^/* commenting/* * ***/'this is a \"string'.'and this\" is another string' \"plus yet 'another\\\" string\""};
 
-    typedef std::string::const_iterator iterator_type;
-    using namespace boost::spirit::lex;
-    typedef lexertl::token< iterator_type, boost::mpl::vector< std::string>>
-            token_type;
-    typedef lexertl::lexer< token_type> lexer_type;
-    typedef lexer_type::iterator_type lexer_iterator_type;
+    using namespace disseqt;
 
-    disseqt::Lexer< lexer_type> l;
-    test_grammar<lexer_iterator_type> g( l);
+    typedef std::string::const_iterator Iterator;
+    typedef LexerTypes<Iterator>::base_lexer_type BaseLexer;
+    typedef LexerTypes<Iterator>::iterator_type LexerIterator;
+
+    Lexer<BaseLexer> l;
+    test_grammar<LexerIterator> g( l);
 
     auto first = test.cbegin();
     auto last = test.cend();
