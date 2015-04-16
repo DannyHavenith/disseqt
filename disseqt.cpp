@@ -451,6 +451,7 @@ struct SqlGrammar : qi::grammar<Iterator, Skipper>
         name =
                 t.IDENTIFIER
             |   t.STRING
+                // add all "non-specific" keywords, i.e. keywords that also may appear as identifiers.
                 BOOST_PP_SEQ_FOR_EACH( DISSEQT_PARSER_KEYWORD_ALTERNATIVE, _, DISSEQT_NONSPECIFIC_KEYWORDS)
            ;
         DISSEQT_DEBUG_NODE( name);
