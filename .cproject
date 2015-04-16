@@ -43,8 +43,8 @@
 							</tool>
 						</toolChain>
 					</folderInfo>
-					<fileInfo id="cdt.managedbuild.config.gnu.exe.debug.1111553780.1914797665" name="testlexer.cpp" rcbsApplicability="disable" resourcePath="testlexer.cpp" toolsToInvoke="cdt.managedbuild.tool.gnu.cpp.compiler.exe.debug.1377442769.1708176079">
-						<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.exe.debug.1377442769.1708176079" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.exe.debug.1377442769"/>
+					<fileInfo id="cdt.managedbuild.config.gnu.exe.debug.1111553780.1075377991" name="disseqt_grammar.cpp" rcbsApplicability="disable" resourcePath="disseqt_grammar.cpp" toolsToInvoke="cdt.managedbuild.tool.gnu.cpp.compiler.exe.debug.1377442769.402576955">
+						<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.exe.debug.1377442769.402576955" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.exe.debug.1377442769"/>
 					</fileInfo>
 					<sourceEntries>
 						<entry excluding="testlexer.cpp" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
@@ -95,11 +95,11 @@
 							</tool>
 						</toolChain>
 					</folderInfo>
-					<fileInfo id="cdt.managedbuild.config.gnu.exe.release.1073104276.1872331777" name="testlexer.cpp" rcbsApplicability="disable" resourcePath="testlexer.cpp" toolsToInvoke="cdt.managedbuild.tool.gnu.cpp.compiler.exe.release.1065075823.1623999381">
-						<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.exe.release.1065075823.1623999381" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.exe.release.1065075823"/>
+					<fileInfo id="cdt.managedbuild.config.gnu.exe.release.1073104276.719105046" name="disseqt_grammar.cpp" rcbsApplicability="disable" resourcePath="disseqt_grammar.cpp" toolsToInvoke="cdt.managedbuild.tool.gnu.cpp.compiler.exe.release.1065075823.2066214775">
+						<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.exe.release.1065075823.2066214775" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.exe.release.1065075823"/>
 					</fileInfo>
 					<sourceEntries>
-						<entry excluding="testlexer.cpp" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>

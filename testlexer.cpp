@@ -24,7 +24,8 @@ struct test_grammar : qi::grammar<Iterator>
         using boost::phoenix::ref;
         using boost::phoenix::size;
 
-        start =  *(     tok.SELECT        [++ref(w), ref(c) += size(_1)]
+        start =  *(     tok.SELECT        [ref(c) += size(_1)]
+                  |     tok.WHITESPACE    [++ref(w)]
                   |     '('
                   |     tok.STRING        [ std::cout << _1 << '\n']
                   )
@@ -37,7 +38,7 @@ struct test_grammar : qi::grammar<Iterator>
 };
 
 
-int test_lexer( int argc, char *argv[])
+int test( int argc, char *argv[])
 {
     std::string test{"SELecT != ?123:abc$efg::hij::kl(sfio\")@mno     ()*^/* commenting/* * ***/'this is a \"string'.'and this\" is another string' \"plus yet 'another\\\" string\""};
 
@@ -69,3 +70,5 @@ int test_lexer( int argc, char *argv[])
 
     return 0;
 }
+
+
