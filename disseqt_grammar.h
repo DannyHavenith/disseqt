@@ -7,6 +7,7 @@
 
 #ifndef DISSEQT_GRAMMAR_H_
 #define DISSEQT_GRAMMAR_H_
+#include "disseqt_ast.h"
 #include <boost/spirit/include/qi.hpp>
 
 namespace disseqt
@@ -30,7 +31,13 @@ namespace disseqt
 
         typedef qi::rule<Iterator, Skipper> rule;
 
-        rule comparison_rhs;
+        // not using a type alias because it needs to work on gcc 4.6
+        template< typename Value, typename Locals = qi::locals<>>
+        struct Rule
+        {
+            typedef qi::rule< Iterator, Value(), Locals, Skipper> t;
+        };
+
         rule column_list;
         rule insert_stmt;
         rule sql_stmt_list;
@@ -57,7 +64,6 @@ namespace disseqt
         rule values_clause;
         rule table_or_subquery;
         rule table_clause;
-        rule composite_table_name;
         rule index_clause;
         rule join_clause;
         rule join_operator;
@@ -83,18 +89,23 @@ namespace disseqt
         rule singular;
         rule signed_number;
         rule factor;
-        rule composite_column_name;
         rule bind_parameter;
-        rule function_name;
-        rule foreign_table;
-        rule index_name;
-        rule table_name;
-        rule database_name;
-        rule collation_name;
-        rule column_name;
-        rule table_alias;
-        rule column_alias;
-        rule name;
+
+        typename Rule<ast::composite_table_name >::t composite_table_name;
+        typename Rule<ast::composite_column_name>::t composite_column_name;
+        typename Rule<ast::function_name >::t function_name;
+        typename Rule<ast::foreign_table >::t foreign_table;
+        typename Rule<ast::index_name    >::t index_name;
+        typename Rule<ast::table_name    >::t table_name;
+        typename Rule<ast::database_name >::t database_name;
+        typename Rule<ast::collation_name>::t collation_name;
+        typename Rule<ast::column_name   >::t column_name;
+        typename Rule<ast::table_alias   >::t table_alias;
+        typename Rule<ast::column_alias  >::t column_alias;
+        typename Rule<ast::generic_name  >::t name;
+
+        rule comparison_rhs;
+
     };
 }
 #endif /* DISSEQT_GRAMMAR_H_ */

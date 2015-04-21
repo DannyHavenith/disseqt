@@ -12,6 +12,10 @@
 namespace disseqt
 {
 namespace qi = boost::spirit::qi;
+
+/**
+ * Parse a SQL query and report whether the parse succeeded.
+ */
 bool parse( std::string::const_iterator &first, std::string::const_iterator last)
 {
     typedef std::string::const_iterator Iterator;
@@ -43,6 +47,9 @@ bool parse( std::string::const_iterator &first, std::string::const_iterator last
     }
 }
 
+/**
+ * Read a bunch of newline-separated SQL queries from a file and run them to through the parser.
+ */
 void test( const std::string &filename)
 {
 

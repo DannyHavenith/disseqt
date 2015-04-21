@@ -27,11 +27,13 @@ namespace disseqt {
         typedef typename base_lexer_type::iterator_type     iterator_type;
     };
 
+    typedef std::string::const_iterator PositionIterator;
+
     template< typename L>
     struct Lexer : boost::spirit::lex::lexer<L>
     {
-        typedef boost::spirit::lex::token_def<> void_token_def;
-        typedef boost::spirit::lex::token_def<> string_token_def;
+        typedef boost::spirit::lex::token_def<boost::spirit::lex::omit> void_token_def;
+        typedef boost::spirit::lex::token_def<boost::iterator_range<PositionIterator>> string_token_def;
 
         Lexer();
 
@@ -58,7 +60,7 @@ namespace disseqt {
         void_token_def      NULL_T;
 
         // boilerplate the other keywords.
-        BOOST_PP_SEQ_FOR_EACH( DISSEQT_LEXER_DECLARE_MEMBER, void_token_def, DISSEQT_KEYWORDS)
+        BOOST_PP_SEQ_FOR_EACH( DISSEQT_LEXER_DECLARE_MEMBER, string_token_def, DISSEQT_KEYWORDS)
     };
 
 }

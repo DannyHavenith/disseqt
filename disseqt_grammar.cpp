@@ -6,6 +6,7 @@
  */
 #include "lexer.h"
 #include "disseqt_grammar.h"
+#include <boost/spirit/include/phoenix.hpp>
 #include <string>
 
 using namespace boost::spirit;
@@ -213,7 +214,7 @@ SqlGrammar<Iterator, Skipper>::SqlGrammar( const Tokens &t)
             ;
     DISSEQT_DEBUG_NODE( table_clause);
 
-    composite_table_name =
+    composite_table_name %=
             -(database_name >> '.') >> table_name
             ;
     DISSEQT_DEBUG_NODE( composite_table_name);
@@ -355,22 +356,22 @@ SqlGrammar<Iterator, Skipper>::SqlGrammar( const Tokens &t)
     DISSEQT_DEBUG_NODE( bitwise_operator);
 
     bitwise_operand =
-            term >>  *('+' >> term |'-' >> term)
+                term >>  *('+' >> term |'-' >> term)
             ;
     DISSEQT_DEBUG_NODE( bitwise_operand);
 
     term =
-            factor >> *( '*' >> factor | '/' >> factor | '%' >> factor)
+                factor >> *( '*' >> factor | '/' >> factor | '%' >> factor)
             ;
     DISSEQT_DEBUG_NODE( term);
 
     factor =
-            singular >> *( t.CONCAT_OP >> singular)
+                singular >> *( t.CONCAT_OP >> singular)
             ;
     DISSEQT_DEBUG_NODE( factor);
 
     singular =
-            (-t.NOT >> t.EXISTS > '(' >> select_stmt >> ')')
+                (-t.NOT >> t.EXISTS > '(' >> select_stmt >> ')')
             |   (t.CASE > -(expr) >> +(t.WHEN > expr >> t.THEN > expr) >> -(t.ELSE > expr) >> t.END)
             |   (t.CAST > '(' > expr > t.AS > type_name > ')')
             |   literal_value
@@ -387,15 +388,14 @@ SqlGrammar<Iterator, Skipper>::SqlGrammar( const Tokens &t)
     DISSEQT_DEBUG_NODE( singular);
 
     signed_number =
-            -(lit('-')|'+') >> t.NUMERIC_LITERAL
+                -(lit('-')|'+') >> t.NUMERIC_LITERAL
             ;
     DISSEQT_DEBUG_NODE( signed_number);
 
-    // todo: make more efficient
     composite_column_name =
-            database_name >> '.' >> table_name >> '.' >> column_name
-            |   table_name >> '.' >> column_name
-            |   column_name
+                name         [ph::at_c<2>(_val) = _1]
+            >> -('.' >> name [ph::at_c<1>(_val) = ph::at_c<2>(_val), ph::at_c<2>(_val) = _1] )
+            >> -('.' >> name [ph::at_c<0>(_val) = ph::at_c<1>(_val), ph::at_c<1>(_val) = ph::at_c<2>(_val), ph::at_c<2>(_val) = _1] )
             ;
     DISSEQT_DEBUG_NODE( composite_column_name);
 
@@ -404,10 +404,8 @@ SqlGrammar<Iterator, Skipper>::SqlGrammar( const Tokens &t)
             ;
     DISSEQT_DEBUG_NODE( bind_parameter);
 
-    // all keywords are also valid function names in sqlite apparently.
-    function_name =
-            name.alias()
-            ;
+    function_name = name.alias()
+                    ;
     DISSEQT_DEBUG_NODE( function_name);
 
     foreign_table =  name.alias()
@@ -444,10 +442,12 @@ SqlGrammar<Iterator, Skipper>::SqlGrammar( const Tokens &t)
 
     // names can be bare identifiers, but also be quoted.
     name =
+        (
             t.IDENTIFIER
         |   t.STRING
-        // add all "non-specific" keywords, i.e. keywords that also may appear as identifiers.
-        BOOST_PP_SEQ_FOR_EACH( DISSEQT_PARSER_KEYWORD_ALTERNATIVE, _, DISSEQT_NONSPECIFIC_KEYWORDS)
+            // add all "non-specific" keywords, i.e. keywords that also may appear as identifiers.
+            BOOST_PP_SEQ_FOR_EACH( DISSEQT_PARSER_KEYWORD_ALTERNATIVE, _, DISSEQT_NONSPECIFIC_KEYWORDS)
+        )[ph::at_c<0>(_val) = _1]
         ;
     DISSEQT_DEBUG_NODE( name);
 
