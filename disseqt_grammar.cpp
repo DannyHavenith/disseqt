@@ -7,6 +7,7 @@
 #include "lexer.h"
 #include "disseqt_grammar.h"
 #include <boost/spirit/include/phoenix.hpp>
+#include <boost/spirit/include/qi_attr.hpp>
 #include <string>
 
 using namespace boost::spirit;
@@ -14,7 +15,6 @@ using namespace boost::spirit::ascii;
 
 //#define DISSEQT_DEBUG
 
-#undef NULL
 #if defined( DISSEQT_DEBUG)
 #    define DISSEQT_DEBUG_NODE( node_) node_.name( #node_); qi::debug( node_)
 #else
@@ -128,7 +128,7 @@ SqlGrammar<Iterator, Skipper>::SqlGrammar( const Tokens &t)
                     (t.ON > (t.DELETE|t.UPDATE) > (t.SET >> t.NULL_T | t.SET >> t.DEFAULT | t.CASCADE | t.RESTRICT | t.NO >> t.ACTION))
                     |   (t.MATCH >> name)
             )
-            >>  -(-t.NOT >> t.DEFERRABLE >> -(t.INITIALLY > (t.DEFERRED|t.IMMEDIATE)))
+            >>  -(opt_not >> t.DEFERRABLE >> -(t.INITIALLY > (t.DEFERRED|t.IMMEDIATE)))
             ;
     DISSEQT_DEBUG_NODE( foreign_key_clause);
 
@@ -302,7 +302,7 @@ SqlGrammar<Iterator, Skipper>::SqlGrammar( const Tokens &t)
     DISSEQT_DEBUG_NODE( weasel_clause);
 
     expr =
-            or_operand >> *( (t.OR) >> or_operand) // really need tokenizer here.
+            or_operand >> *( (t.OR) >> or_operand)
             ;
     DISSEQT_DEBUG_NODE( expr);
 
@@ -319,11 +319,11 @@ SqlGrammar<Iterator, Skipper>::SqlGrammar( const Tokens &t)
     comparison_rhs =
             comparison_operator >> compare_operand
             |   t.COLLATE >> collation_name
-            |   -t.NOT >> t.BETWEEN >> compare_operand >> t.AND >> compare_operand
+            |   opt_not >> t.BETWEEN >> compare_operand >> t.AND >> compare_operand
             |   t.ISNULL
             |   t.NOTNULL
             |   t.NOT >> t.NULL_T
-            |   -t.NOT >> t.IN >>   (
+            |   opt_not >> t.IN >>   (
                     composite_table_name
                     |   ('(' > -(select_stmt | expr%',') > ')')
             )
@@ -331,7 +331,7 @@ SqlGrammar<Iterator, Skipper>::SqlGrammar( const Tokens &t)
     DISSEQT_DEBUG_NODE( comparison_rhs);
 
     comparison_operator =
-            t.EQ_OP | "=" | t.NEQ_OP | t.IS >> t.NOT | t.IS | -t.NOT >> t.LIKE | t.GLOB | t.MATCH | t.REGEXP
+            t.EQ_OP | "=" | t.NEQ_OP | t.IS >> t.NOT | t.IS | opt_not >> t.LIKE | t.GLOB | t.MATCH | t.REGEXP
             ;
     DISSEQT_DEBUG_NODE( comparison_operator);
 
@@ -371,7 +371,7 @@ SqlGrammar<Iterator, Skipper>::SqlGrammar( const Tokens &t)
     DISSEQT_DEBUG_NODE( factor);
 
     singular =
-                (-t.NOT >> t.EXISTS > '(' >> select_stmt >> ')')
+                (opt_not >> t.EXISTS > '(' >> select_stmt >> ')')
             |   (t.CASE > -(expr) >> +(t.WHEN > expr >> t.THEN > expr) >> -(t.ELSE > expr) >> t.END)
             |   (t.CAST > '(' > expr > t.AS > type_name > ')')
             |   literal_value
@@ -386,6 +386,12 @@ SqlGrammar<Iterator, Skipper>::SqlGrammar( const Tokens &t)
             |   (t.NOT >> singular)
             ;
     DISSEQT_DEBUG_NODE( singular);
+
+    opt_not =
+                t.NOT >> attr( false)
+            |   attr( true)
+            ;
+    DISSEQT_DEBUG_NODE( opt_not);
 
     signed_number =
                 -(lit('-')|'+') >> t.NUMERIC_LITERAL

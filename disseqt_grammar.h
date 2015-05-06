@@ -103,6 +103,7 @@ namespace disseqt
         typename Rule<ast::table_alias   >::t table_alias;
         typename Rule<ast::column_alias  >::t column_alias;
         typename Rule<ast::generic_name  >::t name;
+        typename Rule<bool>::t                opt_not;
 
         rule comparison_rhs;
 
