@@ -12,7 +12,8 @@
 #define DISSEQT_AST_NAMES_H_
 #include <boost/range/iterator_range.hpp>
 #include <boost/optional.hpp>
-#include <boost/variant/variant.hpp>
+#include <boost/spirit/include/lex_lexertl.hpp>
+#include <boost/spirit/include/support.hpp>
 #include <boost/fusion/adapted/struct.hpp>
 
 namespace disseqt
@@ -21,8 +22,6 @@ namespace disseqt
     {
         typedef boost::iterator_range<std::string::const_iterator> value_type;
         using boost::optional;
-        using boost::variant;
-
 
         struct generic_name_tag {};
 

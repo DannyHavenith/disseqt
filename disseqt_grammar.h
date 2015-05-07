@@ -9,6 +9,7 @@
 #define DISSEQT_GRAMMAR_H_
 #include <boost/spirit/include/qi.hpp>
 #include "disseqt_ast_names.h"
+#include "disseqt_ast_expressions.h"
 
 namespace disseqt
 {
@@ -79,11 +80,8 @@ namespace disseqt
         rule expr;
         rule or_operand;
         rule and_operand;
-        rule comparison_operator;
         rule compare_operand;
-        rule ineq_operator;
         rule ineq_operand;
-        rule bitwise_operator;
         rule bitwise_operand;
         rule term;
         rule singular;
@@ -104,6 +102,15 @@ namespace disseqt
         typename Rule<ast::column_alias  >::t column_alias;
         typename Rule<ast::generic_name  >::t name;
         typename Rule<bool>::t                opt_not;
+        typename Rule<ast::unary_op>::t       unary_expr;
+        typename Rule<ast::expression>::t     singular2;
+        typename Rule<ast::operator_type>::t  unary_operator;
+        typename Rule<ast::operator_type>::t  multiplicative_operator;
+        typename Rule<ast::operator_type>::t  additive_operator;
+        typename Rule<ast::operator_type>::t  bitwise_operator;
+        typename Rule<ast::operator_type>::t  ineq_operator;
+        typename Rule<ast::operator_type>::t  comparison_operator;
+
 
         rule comparison_rhs;
 

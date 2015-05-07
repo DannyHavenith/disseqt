@@ -32,6 +32,7 @@ SqlGrammar<Iterator, Skipper>::SqlGrammar( const Tokens &t)
 :SqlGrammar<Iterator, Skipper>::base_type( sql_stmt)
 {
     namespace ph=boost::phoenix;
+    using namespace ast;
 
     sql_stmt_list
     =   sql_stmt % ';'
@@ -90,7 +91,7 @@ SqlGrammar<Iterator, Skipper>::SqlGrammar( const Tokens &t)
     DISSEQT_DEBUG_NODE( type_name);
 
     column_constraint =
-            -(t.CONSTRAINT > name)
+                -(t.CONSTRAINT > name)
             >>  (
                     (t.PRIMARY > t.KEY > -(t.ASC|t.DESC) >> -conflict_clause >> -t.AUTOINCREMENT)
                     |   (t.NOT > t.NULL_T > -conflict_clause)
@@ -104,7 +105,7 @@ SqlGrammar<Iterator, Skipper>::SqlGrammar( const Tokens &t)
     DISSEQT_DEBUG_NODE( column_constraint);
 
     literal_value =
-            numeric_literal
+                numeric_literal
             |   string_literal
             |   blob_literal
             |   t.NULL_T
@@ -302,12 +303,12 @@ SqlGrammar<Iterator, Skipper>::SqlGrammar( const Tokens &t)
     DISSEQT_DEBUG_NODE( weasel_clause);
 
     expr =
-            or_operand >> *( (t.OR) >> or_operand)
+            or_operand >> *( omit[t.OR] >> attr( Or) >> or_operand)
             ;
     DISSEQT_DEBUG_NODE( expr);
 
     or_operand =
-            and_operand >> *( t.AND >> and_operand)
+            and_operand >> *( omit[t.AND] >> attr(And) >> and_operand)
             ;
     DISSEQT_DEBUG_NODE( or_operand);
 
@@ -331,7 +332,16 @@ SqlGrammar<Iterator, Skipper>::SqlGrammar( const Tokens &t)
     DISSEQT_DEBUG_NODE( comparison_rhs);
 
     comparison_operator =
-            t.EQ_OP | "=" | t.NEQ_OP | t.IS >> t.NOT | t.IS | opt_not >> t.LIKE | t.GLOB | t.MATCH | t.REGEXP
+                omit[t.EQ_OP]       >> attr( Equals)
+            |   omit["="]           >> attr( Equals)
+            |   omit[t.NEQ_OP]      >> attr( NotEquals)
+            |   omit[t.IS >> t.NOT] >> attr( NotEquals)
+            |   omit[t.IS]          >> attr( Equals)
+            |   omit[t.LIKE]        >> attr( Like)
+            |   omit[t.NOT >> t.LIKE] >> attr( NotLike)
+            |   omit[t.GLOB]        >> attr( Glob)
+            |   omit[t.MATCH]       >> attr( Match)
+            |   omit[t.REGEXP]      >> attr( Regexp)
             ;
     DISSEQT_DEBUG_NODE( comparison_operator);
 
@@ -341,8 +351,12 @@ SqlGrammar<Iterator, Skipper>::SqlGrammar( const Tokens &t)
     DISSEQT_DEBUG_NODE( compare_operand);
 
     ineq_operator =
-            t.LE_OP | '<' | t.GE_OP | '>'
+                omit[t.LE_OP]   >> attr( LessEquals)
+            |   omit[t.GE_OP]   >> attr( GreaterEquals)
+            |   omit['<']       >> attr( Less)
+            |   omit['>']       >> attr( Greater)
             ;
+
     DISSEQT_DEBUG_NODE( ineq_operator);
 
     ineq_operand =
@@ -351,17 +365,20 @@ SqlGrammar<Iterator, Skipper>::SqlGrammar( const Tokens &t)
     DISSEQT_DEBUG_NODE( ineq_operand);
 
     bitwise_operator =
-            t.SHLEFT_OP | t.SHRIGHT_OP | '&' | '|'
+                omit[t.SHLEFT_OP]   >> attr( ShiftLeft)
+            |   omit[t.SHRIGHT_OP]  >> attr( ShiftRight)
+            |   omit['&']           >> attr( BitAnd)
+            |   omit['|']           >> attr( BitOr)
             ;
     DISSEQT_DEBUG_NODE( bitwise_operator);
 
     bitwise_operand =
-                term >>  *('+' >> term |'-' >> term)
+                term >>  *(additive_operator >> term)
             ;
     DISSEQT_DEBUG_NODE( bitwise_operand);
 
     term =
-                factor >> *( '*' >> factor | '/' >> factor | '%' >> factor)
+                factor >> *( multiplicative_operator >> factor)
             ;
     DISSEQT_DEBUG_NODE( term);
 
@@ -371,7 +388,7 @@ SqlGrammar<Iterator, Skipper>::SqlGrammar( const Tokens &t)
     DISSEQT_DEBUG_NODE( factor);
 
     singular =
-                (opt_not >> t.EXISTS > '(' >> select_stmt >> ')')
+                (t.EXISTS > '(' >> select_stmt >> ')')
             |   (t.CASE > -(expr) >> +(t.WHEN > expr >> t.THEN > expr) >> -(t.ELSE > expr) >> t.END)
             |   (t.CAST > '(' > expr > t.AS > type_name > ')')
             |   literal_value
@@ -380,16 +397,37 @@ SqlGrammar<Iterator, Skipper>::SqlGrammar( const Tokens &t)
             |   composite_column_name
             |   '(' >> select_stmt >> ')'   // not in the syntax diagrams, but described in "Table Column Names".
             |   '(' >> expr >> ')'
-            |   ('-' >> singular)
-            |   ('+' >> singular)
-            |   ('~' >> singular)
-            |   (t.NOT >> singular)
+            |   unary_expr
             ;
     DISSEQT_DEBUG_NODE( singular);
 
+    unary_expr =
+            unary_operator >> singular2
+            ;
+
+    unary_operator =
+                (omit['-']   >> attr( Minus))
+            |   (omit['+']   >> attr( Plus))
+            |   (omit['~']   >> attr( BitNot))
+            |   (omit[t.NOT] >> attr( Not))
+            ;
+
+    multiplicative_operator =
+                (omit['*']   >> attr( Times))
+            |   (omit['/']   >> attr( Divided))
+            |   (omit['%']   >> attr( Modulo))
+            ;
+
+    additive_operator =
+                (omit['-']   >> attr( Minus))
+            |   (omit['+']   >> attr( Plus))
+            ;
+
+    // optional NOT
+    // The synthesized attribute is a boolean that is true iff "NOT" appeared in the input.
     opt_not =
-                t.NOT >> attr( false)
-            |   attr( true)
+                t.NOT >> attr( true)
+            |   attr( false)
             ;
     DISSEQT_DEBUG_NODE( opt_not);
 
