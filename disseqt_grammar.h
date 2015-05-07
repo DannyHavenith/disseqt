@@ -7,8 +7,8 @@
 
 #ifndef DISSEQT_GRAMMAR_H_
 #define DISSEQT_GRAMMAR_H_
-#include "disseqt_ast.h"
 #include <boost/spirit/include/qi.hpp>
+#include "disseqt_ast_names.h"
 
 namespace disseqt
 {
