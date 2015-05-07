@@ -40,7 +40,6 @@ namespace disseqt {
         void_token_def      WHITESPACE;
         void_token_def      COMMENT;
         void_token_def      SKIPPER;
-        string_token_def    STRING;
         void_token_def      EQ_OP;
         void_token_def      NEQ_OP;
         void_token_def      LE_OP;
@@ -48,19 +47,22 @@ namespace disseqt {
         void_token_def      SHLEFT_OP;
         void_token_def      SHRIGHT_OP;
         void_token_def      CONCAT_OP;
+        void_token_def      UNKNOWN;
+
+        string_token_def    STRING;
         string_token_def    BLOB;
         string_token_def    IDENTIFIER;
         string_token_def    BIND_PARAMETER;
         string_token_def    NUMERIC_LITERAL;
         string_token_def    INTEGER;
-        void_token_def      UNKNOWN;
 
         // NULL is treated differently, since it causes havoc, being a C macro as well,
         // #undef-ing NULL fails on a g++ __null intrinsic.
         void_token_def      NULL_T;
 
         // boilerplate the other keywords.
-        BOOST_PP_SEQ_FOR_EACH( DISSEQT_LEXER_DECLARE_MEMBER, string_token_def, DISSEQT_KEYWORDS)
+        BOOST_PP_SEQ_FOR_EACH( DISSEQT_LEXER_DECLARE_MEMBER, void_token_def, DISSEQT_SPECIFIC_KEYWORDS)
+        BOOST_PP_SEQ_FOR_EACH( DISSEQT_LEXER_DECLARE_MEMBER, string_token_def, DISSEQT_NONSPECIFIC_KEYWORDS)
     };
 
 }

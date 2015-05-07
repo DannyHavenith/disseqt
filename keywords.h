@@ -8,7 +8,7 @@
 #ifndef DISSEQT_KEYWORDS_H_
 #define DISSEQT_KEYWORDS_H_
 
-// keywords that can also appear as identifiers.
+/// keywords that can also appear as identifiers.
 #define DISSEQT_NONSPECIFIC_KEYWORDS \
         (REGEXP)\
         (OUTER)\
@@ -50,10 +50,8 @@
         (NO)\
         /**/
 
-// All keywords understood by disseqts lexer, except for NULL, which needs some
-// special treatment because it's a C macro as well.
-// There are more terminals than just these keywords. These are handled in the lexer.
-#define DISSEQT_KEYWORDS \
+/// keywords that can not appear as identifiers.
+#define DISSEQT_SPECIFIC_KEYWORDS \
         (ISNULL)\
         (NOTNULL)\
         (INSERT)\
@@ -105,6 +103,14 @@
         (OR)\
         (IS)\
         (IN)\
+        /**/
+
+
+// All keywords understood by disseqts lexer, except for NULL, which needs some
+// special treatment because it's a C macro as well.
+// There are more terminals than just these keywords. These are handled in the lexer.
+#define DISSEQT_KEYWORDS \
+        DISSEQT_SPECIFIC_KEYWORDS\
         DISSEQT_NONSPECIFIC_KEYWORDS\
         /**/
 

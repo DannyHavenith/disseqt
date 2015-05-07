@@ -10,6 +10,7 @@
 #include <boost/spirit/include/qi.hpp>
 #include "disseqt_ast_names.h"
 #include "disseqt_ast_expressions.h"
+#include "disseqt_ast_statements.h"
 
 namespace disseqt
 {
@@ -47,7 +48,6 @@ namespace disseqt
         rule stmt;
         rule create_table_stmt;
         rule column_def;
-        rule type_name;
         rule column_constraint;
         rule literal_value;
         rule conflict_clause;
@@ -57,7 +57,6 @@ namespace disseqt
         rule numeric_literal;
         rule string_literal;
         rule blob_literal;
-        rule select_stmt;
         rule order_by_clause;
         rule limit_clause;
         rule select_phrase;
@@ -84,13 +83,14 @@ namespace disseqt
         rule ineq_operand;
         rule bitwise_operand;
         rule term;
-        rule singular;
         rule signed_number;
         rule factor;
         rule bind_parameter;
+        rule comparison_rhs;
 
         typename Rule<ast::composite_table_name >::t composite_table_name;
         typename Rule<ast::composite_column_name>::t composite_column_name;
+        typename Rule<ast::case_expression>::t case_when;
         typename Rule<ast::function_name >::t function_name;
         typename Rule<ast::foreign_table >::t foreign_table;
         typename Rule<ast::index_name    >::t index_name;
@@ -101,19 +101,20 @@ namespace disseqt
         typename Rule<ast::table_alias   >::t table_alias;
         typename Rule<ast::column_alias  >::t column_alias;
         typename Rule<ast::generic_name  >::t name;
-        typename Rule<bool>::t                opt_not;
-        typename Rule<ast::unary_op>::t       unary_expr;
-        typename Rule<ast::expression>::t     singular2;
-        typename Rule<ast::operator_type>::t  unary_operator;
-        typename Rule<ast::operator_type>::t  multiplicative_operator;
-        typename Rule<ast::operator_type>::t  additive_operator;
-        typename Rule<ast::operator_type>::t  bitwise_operator;
-        typename Rule<ast::operator_type>::t  ineq_operator;
-        typename Rule<ast::operator_type>::t  comparison_operator;
-
-
-        rule comparison_rhs;
-
+        typename Rule<bool               >::t opt_not;
+        typename Rule<ast::unary_op      >::t unary_expr;
+        typename Rule<ast::expression    >::t singular;
+        typename Rule<ast::operator_type >::t unary_operator;
+        typename Rule<ast::operator_type >::t multiplicative_operator;
+        typename Rule<ast::operator_type >::t additive_operator;
+        typename Rule<ast::operator_type >::t bitwise_operator;
+        typename Rule<ast::operator_type >::t ineq_operator;
+        typename Rule<ast::operator_type >::t comparison_operator;
+        typename Rule<ast::select        >::t select_stmt;
+        typename Rule<ast::exists        >::t exists_expr;
+        typename Rule<ast::type_name     >::t type_name;
+        typename Rule<ast::cast          >::t cast_expr;
+        typename Rule<ast::function_call >::t function_call_expr;
     };
 }
 #endif /* DISSEQT_GRAMMAR_H_ */

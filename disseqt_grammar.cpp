@@ -85,10 +85,10 @@ SqlGrammar<Iterator, Skipper>::SqlGrammar( const Tokens &t)
             ;
     DISSEQT_DEBUG_NODE( column_def);
 
-    type_name =
-            *t.IDENTIFIER >> -( '(' > signed_number >> -(',' >> signed_number ) > ')'   )
-            ;
-    DISSEQT_DEBUG_NODE( type_name);
+//    type_name =
+//            *t.IDENTIFIER >> -( '(' > signed_number >> -(',' >> signed_number ) > ')'   )
+//            ;
+//    DISSEQT_DEBUG_NODE( type_name);
 
     column_constraint =
                 -(t.CONSTRAINT > name)
@@ -364,13 +364,6 @@ SqlGrammar<Iterator, Skipper>::SqlGrammar( const Tokens &t)
             ;
     DISSEQT_DEBUG_NODE( ineq_operand);
 
-    bitwise_operator =
-                omit[t.SHLEFT_OP]   >> attr( ShiftLeft)
-            |   omit[t.SHRIGHT_OP]  >> attr( ShiftRight)
-            |   omit['&']           >> attr( BitAnd)
-            |   omit['|']           >> attr( BitOr)
-            ;
-    DISSEQT_DEBUG_NODE( bitwise_operator);
 
     bitwise_operand =
                 term >>  *(additive_operator >> term)
@@ -387,23 +380,51 @@ SqlGrammar<Iterator, Skipper>::SqlGrammar( const Tokens &t)
             ;
     DISSEQT_DEBUG_NODE( factor);
 
-    singular =
-                (t.EXISTS > '(' >> select_stmt >> ')')
-            |   (t.CASE > -(expr) >> +(t.WHEN > expr >> t.THEN > expr) >> -(t.ELSE > expr) >> t.END)
-            |   (t.CAST > '(' > expr > t.AS > type_name > ')')
-            |   literal_value
-            |   bind_parameter
-            |   (function_name >> '(' > -( '*'| -t.DISTINCT >> expr%',') >> ')')
-            |   composite_column_name
-            |   '(' >> select_stmt >> ')'   // not in the syntax diagrams, but described in "Table Column Names".
-            |   '(' >> expr >> ')'
-            |   unary_expr
+//    singular =
+//                exists_expr
+//            |   case_when
+//            |   cast_expr
+//            |   literal_value
+//            |   bind_parameter
+//            |   function_call_expr
+//            |   composite_column_name
+//            |   '(' >> select_stmt >> ')'   // not in the syntax diagrams, but described in "Table Column Names".
+//            |   '(' >> expr >> ')'
+//            |   unary_expr
+//            ;
+//    DISSEQT_DEBUG_NODE( singular);
+
+    function_call_expr =
+                (function_name >> '(' > -( '*'| -t.DISTINCT >> expr%',') >> ')')
             ;
-    DISSEQT_DEBUG_NODE( singular);
+
+    cast_expr =
+                (t.CAST > '(' > expr > t.AS > type_name > ')')
+            ;
+    DISSEQT_DEBUG_NODE( cast_expr);
+
+    exists_expr =
+                (omit[t.EXISTS] > '(' >> select_stmt >> ')')
+            ;
+    DISSEQT_DEBUG_NODE( exists_expr);
+
+    case_when  =
+                (t.CASE > -(expr) >> +(t.WHEN > expr >> t.THEN > expr) >> -(t.ELSE > expr) >> omit[t.END])
+            ;
+    DISSEQT_DEBUG_NODE( case_when);
 
     unary_expr =
-            unary_operator >> singular2
+            unary_operator >> singular
             ;
+    DISSEQT_DEBUG_NODE( unary_expr);
+
+    bitwise_operator =
+                omit[t.SHLEFT_OP]   >> attr( ShiftLeft)
+            |   omit[t.SHRIGHT_OP]  >> attr( ShiftRight)
+            |   omit['&']           >> attr( BitAnd)
+            |   omit['|']           >> attr( BitOr)
+            ;
+    DISSEQT_DEBUG_NODE( bitwise_operator);
 
     unary_operator =
                 (omit['-']   >> attr( Minus))
@@ -411,17 +432,20 @@ SqlGrammar<Iterator, Skipper>::SqlGrammar( const Tokens &t)
             |   (omit['~']   >> attr( BitNot))
             |   (omit[t.NOT] >> attr( Not))
             ;
+    DISSEQT_DEBUG_NODE( unary_operator);
 
     multiplicative_operator =
                 (omit['*']   >> attr( Times))
             |   (omit['/']   >> attr( Divided))
             |   (omit['%']   >> attr( Modulo))
             ;
+    DISSEQT_DEBUG_NODE( multiplicative_operator);
 
     additive_operator =
                 (omit['-']   >> attr( Minus))
             |   (omit['+']   >> attr( Plus))
             ;
+    DISSEQT_DEBUG_NODE( additive_operator);
 
     // optional NOT
     // The synthesized attribute is a boolean that is true iff "NOT" appeared in the input.
