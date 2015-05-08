@@ -54,9 +54,6 @@ namespace disseqt
         rule foreign_key_clause;
         rule table_constraint;
         rule indexed_column;
-        rule numeric_literal;
-        rule string_literal;
-        rule blob_literal;
         rule order_by_clause;
         rule limit_clause;
         rule select_phrase;
@@ -76,21 +73,13 @@ namespace disseqt
         rule qualified_table_name;
         rule update_limited_clause;
         rule weasel_clause;
-        rule expr;
-        rule or_operand;
-        rule and_operand;
-        rule compare_operand;
-        rule ineq_operand;
-        rule bitwise_operand;
-        rule term;
-        rule signed_number;
-        rule factor;
         rule bind_parameter;
         rule comparison_rhs;
 
         typename Rule<ast::composite_table_name >::t composite_table_name;
         typename Rule<ast::composite_column_name>::t composite_column_name;
-        typename Rule<ast::case_expression>::t case_when;
+        typename Rule<ast::function_arguments   >::t function_arguments;
+        typename Rule<ast::case_expression      >::t case_when;
         typename Rule<ast::function_name >::t function_name;
         typename Rule<ast::foreign_table >::t foreign_table;
         typename Rule<ast::index_name    >::t index_name;
@@ -102,6 +91,7 @@ namespace disseqt
         typename Rule<ast::column_alias  >::t column_alias;
         typename Rule<ast::generic_name  >::t name;
         typename Rule<bool               >::t opt_not;
+        typename Rule<bool               >::t opt_distinct;
         typename Rule<ast::unary_op      >::t unary_expr;
         typename Rule<ast::expression    >::t singular;
         typename Rule<ast::operator_type >::t unary_operator;
@@ -115,6 +105,21 @@ namespace disseqt
         typename Rule<ast::type_name     >::t type_name;
         typename Rule<ast::cast          >::t cast_expr;
         typename Rule<ast::function_call >::t function_call_expr;
+        typename Rule<ast::expression    >::t expr;
+        typename Rule<ast::numeric_literal>::t numeric_literal;
+        typename Rule<ast::string_literal>::t string_literal;
+        typename Rule<ast::blob_literal  >::t blob_literal;
+        typename Rule<ast::expression    >::t or_operand;
+        typename Rule<ast::expression    >::t and_operand;
+        typename Rule<ast::expression    >::t compare_operand;
+        typename Rule<ast::expression    >::t ineq_operand;
+        typename Rule<ast::expression    >::t bitwise_operand;
+        typename Rule<ast::expression    >::t term;
+        typename Rule<ast::expression    >::t factor;
+        typename Rule<ast::expression    >::t collate;
+        typename Rule<ast::signed_number >::t signed_number;
+        typename Rule<ast::set_expression>::t set_expresion;
+
     };
 }
 #endif /* DISSEQT_GRAMMAR_H_ */

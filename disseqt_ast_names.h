@@ -20,7 +20,7 @@ namespace disseqt
 {
     namespace ast
     {
-        typedef boost::iterator_range<std::string::const_iterator> value_type;
+        typedef boost::iterator_range<std::string::const_iterator> text_reference;
         using boost::optional;
 
         struct generic_name_tag {};
@@ -31,52 +31,62 @@ namespace disseqt
          * During parsing, names are tagged with generic_name_tag, until it is known which name is being parsed.
          */
         template< typename TagType>
-        struct name
+        struct text
         {
             typedef TagType tag_type;
-            name( ) = default;
+            text( ) = default;
             template<typename OtherTag>
-            name( const name<OtherTag> &other): value( other.value){}
+            text( const text<OtherTag> &other): value( other.value){}
+
             template<typename OtherTag>
-            name<TagType>& operator=( const name<OtherTag> &other)
+            text<TagType>& operator=( const text<OtherTag> &other)
             {
                 value = other.value;
                 return *this;
             }
 
-            value_type value;
+            text( const text_reference &ref)
+            :value( ref) {}
+
+            text *operator=( const text_reference &ref)
+            {
+                value = ref;
+                return *this;
+            }
+
+            text_reference value;
             boost::spirit::qi::unused_type dummy;
         };
 
-        typedef name<generic_name_tag> generic_name;
+        typedef text<generic_name_tag> generic_name;
 
         struct function_name_tag {};
-        typedef name<function_name_tag> function_name;
+        typedef text<function_name_tag> function_name;
 
         struct basic_table_name_tag {};
         struct foreign_table_tag : basic_table_name_tag {};
-        typedef name<foreign_table_tag> foreign_table;
+        typedef text<foreign_table_tag> foreign_table;
 
         struct index_name_tag {};
-        typedef name<index_name_tag> index_name;
+        typedef text<index_name_tag> index_name;
 
         struct table_name_tag : basic_table_name_tag {};
-        typedef name<table_name_tag> table_name;
+        typedef text<table_name_tag> table_name;
 
         struct database_name_tag {};
-        typedef name<database_name_tag> database_name;
+        typedef text<database_name_tag> database_name;
 
         struct collation_name_tag {};
-        typedef name<collation_name_tag> collation_name;
+        typedef text<collation_name_tag> collation_name;
 
         struct table_alias_tag {};
-        typedef name<table_alias_tag> table_alias;
+        typedef text<table_alias_tag> table_alias;
 
         struct column_alias_tag {};
-        typedef name<column_alias_tag> column_alias;
+        typedef text<column_alias_tag> column_alias;
 
         struct column_name_tag {};
-        typedef name<column_name_tag> column_name;
+        typedef text<column_name_tag> column_name;
 
         struct composite_table_name
         {
@@ -95,8 +105,8 @@ namespace disseqt
 
 BOOST_FUSION_ADAPT_TPL_STRUCT(
         (TagType),
-        (disseqt::ast::name)(TagType),
-        (disseqt::ast::value_type, value)
+        (disseqt::ast::text)(TagType),
+        (disseqt::ast::text_reference, value)
         (boost::spirit::qi::unused_type, dummy)
         )
 

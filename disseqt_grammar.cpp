@@ -6,6 +6,9 @@
  */
 #include "lexer.h"
 #include "disseqt_grammar.h"
+
+#include <boost/spirit/include/qi_attr.hpp>
+
 #include <boost/spirit/include/phoenix.hpp>
 #include <boost/spirit/include/qi_attr.hpp>
 #include <string>
@@ -20,11 +23,48 @@ using namespace boost::spirit::ascii;
 #else
 #    define DISSEQT_DEBUG_NODE( node_) node_.name( #node_)
 #endif
-
 #define DISSEQT_PARSER_KEYWORD_ALTERNATIVE( r, type, keyword) |  t.keyword
+
+namespace {
+    namespace spirit = boost::spirit;
+    template <typename Expr, typename Iterator = spirit::unused_type>
+       struct attribute_of_parser
+       {
+           typedef typename spirit::result_of::compile<
+               spirit::qi::domain, Expr
+           >::type parser_expression_type;
+
+           typedef typename spirit::traits::attribute_of<
+               parser_expression_type, spirit::unused_type, Iterator
+           >::type type;
+       };
+
+    template <typename T>
+    void display_attribute_of_parser(T const&)
+    {
+        typedef std::string::const_iterator Iterator;
+        typedef
+                typename attribute_of_parser<
+                    T,
+                    typename disseqt::LexerTypes<Iterator>::iterator_type
+                    >::type attribute_type;
+        std::cout << typeid(attribute_type).name() << std::endl;
+    }
+}
 
 namespace disseqt
 {
+namespace {
+    /// construct a binary expression
+    ast::expression binexp(
+            ast::operator_type op,
+            const ast::expression &left,
+            const ast::expression &right)
+    {
+        return ast::binary_op{ op, left, right};
+    }
+
+}
 
 template< typename Iterator, typename Skipper>
 template< typename Tokens>
@@ -85,10 +125,10 @@ SqlGrammar<Iterator, Skipper>::SqlGrammar( const Tokens &t)
             ;
     DISSEQT_DEBUG_NODE( column_def);
 
-//    type_name =
-//            *t.IDENTIFIER >> -( '(' > signed_number >> -(',' >> signed_number ) > ')'   )
-//            ;
-//    DISSEQT_DEBUG_NODE( type_name);
+    type_name =
+            *name >> -( '(' > signed_number >> -(',' >> signed_number ) > ')'   )
+            ;
+    DISSEQT_DEBUG_NODE( type_name);
 
     column_constraint =
                 -(t.CONSTRAINT > name)
@@ -115,9 +155,8 @@ SqlGrammar<Iterator, Skipper>::SqlGrammar( const Tokens &t)
             ;
     DISSEQT_DEBUG_NODE( literal_value);
 
-    // in the syntax spec for SQLite, this one has an empty alternative, this has been
+    // in the syntax spec for SQLite, conflict_clause has an empty alternative, this has been
     // removed and the conflict clause itself has become optional in all rules that use it.
-
     conflict_clause =
             t.ON > t.CONFLICT > (t.ROLLBACK|t.ABORT|t.FAIL|t.IGNORE|t.REPLACE)
             ;
@@ -149,17 +188,17 @@ SqlGrammar<Iterator, Skipper>::SqlGrammar( const Tokens &t)
     DISSEQT_DEBUG_NODE( indexed_column);
 
     numeric_literal =
-            t.NUMERIC_LITERAL
+            t.NUMERIC_LITERAL [ph::at_c<0>(_val) = _1]
             ;
     DISSEQT_DEBUG_NODE( numeric_literal);
 
     string_literal =
-            t.STRING
+            t.STRING [ph::at_c<0>(_val) = _1]
             ;
     DISSEQT_DEBUG_NODE( string_literal);
 
     blob_literal =
-            t.BLOB
+            t.BLOB [ph::at_c<0>(_val) = _1]
             ;
     DISSEQT_DEBUG_NODE( blob_literal);
 
@@ -238,9 +277,8 @@ SqlGrammar<Iterator, Skipper>::SqlGrammar( const Tokens &t)
 
     // officially contains an empty (epsilon) alternative, but instead we're making this
     // rule optional wherever it is used.
-
     join_constraint =
-            (t.ON > expr)
+                (t.ON > expr)
             |   (t.USING > column_list)
             ;
     DISSEQT_DEBUG_NODE( join_constraint);
@@ -303,33 +341,41 @@ SqlGrammar<Iterator, Skipper>::SqlGrammar( const Tokens &t)
     DISSEQT_DEBUG_NODE( weasel_clause);
 
     expr =
-            or_operand >> *( omit[t.OR] >> attr( Or) >> or_operand)
+                or_operand              [_val = _1]
+            >>  *( t.OR >> or_operand)  [_val = ph::bind( binexp, Or, _val, _1)]
             ;
     DISSEQT_DEBUG_NODE( expr);
 
     or_operand =
-            and_operand >> *( omit[t.AND] >> attr(And) >> and_operand)
+                and_operand                 [_val = _1]
+            >>  *( t.AND >> and_operand)    [ph::bind( binexp, And, _val, _1)]
             ;
     DISSEQT_DEBUG_NODE( or_operand);
 
     and_operand =
-            compare_operand >> *comparison_rhs
+                compare_operand                             [_val = _1]
+            >>  *(
+                        (opt_not >> t.BETWEEN >> equality_operand >> t.AND >> equality_operand)
+                    |   comparison_rhs
+                )
+
             ;
     DISSEQT_DEBUG_NODE( and_operand);
 
     comparison_rhs =
-            comparison_operator >> compare_operand
-            |   t.COLLATE >> collation_name
-            |   opt_not >> t.BETWEEN >> compare_operand >> t.AND >> compare_operand
-            |   t.ISNULL
-            |   t.NOTNULL
-            |   t.NOT >> t.NULL_T
-            |   opt_not >> t.IN >>   (
-                    composite_table_name
-                    |   ('(' > -(select_stmt | expr%',') > ')')
+                comparison_operator >> compare_operand
+            |   (t.ISNULL)          [ ph::bind( unaryexp, Equals, null)]
+            |   t.NOTNULL           [ ph::bind( unaryexp, NotEquals, null)]
+            |   t.NOT >> t.NULL_T   [ ph::bind( unaryexp, NotEquals, null)]
+            |   opt_not >> t.IN >>  set_expression
             )
             ;
     DISSEQT_DEBUG_NODE( comparison_rhs);
+
+    set_expression =
+                composite_table_name
+            |   '(' >> (select_stmt | -(expr%',')) >> ')'
+            ;
 
     comparison_operator =
                 omit[t.EQ_OP]       >> attr( Equals)
@@ -345,7 +391,7 @@ SqlGrammar<Iterator, Skipper>::SqlGrammar( const Tokens &t)
             ;
     DISSEQT_DEBUG_NODE( comparison_operator);
 
-    compare_operand =
+    equality_operand =
             ineq_operand >> *( ineq_operator >> ineq_operand)
             ;
     DISSEQT_DEBUG_NODE( compare_operand);
@@ -366,37 +412,57 @@ SqlGrammar<Iterator, Skipper>::SqlGrammar( const Tokens &t)
 
 
     bitwise_operand =
-                term >>  *(additive_operator >> term)
+                term [_val = _1]
+            >>  *(additive_operator >> term)[ _val = ph::bind( binexp, _1, _val, _2)]
             ;
     DISSEQT_DEBUG_NODE( bitwise_operand);
 
     term =
-                factor >> *( multiplicative_operator >> factor)
+                factor [_val = _1]
+            >> *( multiplicative_operator >> factor) [_val = ph::bind( binexp, _1, _val, _2)]
             ;
     DISSEQT_DEBUG_NODE( term);
 
     factor =
-                singular >> *( t.CONCAT_OP >> singular)
+                collate [_val = _1]
+            >>  *( t.CONCAT_OP >> collate [_val = ph::bind( binexp, Concat, _val, _1)])
             ;
     DISSEQT_DEBUG_NODE( factor);
 
-//    singular =
-//                exists_expr
-//            |   case_when
-//            |   cast_expr
-//            |   literal_value
-//            |   bind_parameter
-//            |   function_call_expr
-//            |   composite_column_name
-//            |   '(' >> select_stmt >> ')'   // not in the syntax diagrams, but described in "Table Column Names".
-//            |   '(' >> expr >> ')'
-//            |   unary_expr
-//            ;
-//    DISSEQT_DEBUG_NODE( singular);
+    collate =
+                singular                        [_val = _1]
+            >>  -(t.COLLATE >> collation_name)  [_val = ph::bind(binexp, Collate, _val, _1)]
+            ;
+    DISSEQT_DEBUG_NODE( collate);
+
+    singular =
+                exists_expr
+            |   case_when
+            |   cast_expr
+            |   literal_value
+            |   bind_parameter
+            |   function_call_expr
+            |   composite_column_name
+            |   '(' >> select_stmt >> ')'   // not in the syntax diagrams, but described in "Table Column Names".
+            |   '(' >> expr >> ')'
+            |   unary_expr
+            ;
+    DISSEQT_DEBUG_NODE( singular);
 
     function_call_expr =
-                (function_name >> '(' > -( '*'| -t.DISTINCT >> expr%',') >> ')')
+                (function_name >> '(' > -( '*' >> attr(ast::star())| function_arguments) >> ')')
             ;
+    DISSEQT_DEBUG_NODE( function_call_expr);
+
+    opt_distinct =
+                omit[t.DISTINCT] >> attr( true)
+            |   attr( false)
+            ;
+
+    function_arguments =
+                opt_distinct >> (expr%',')
+            ;
+    DISSEQT_DEBUG_NODE(function_arguments);
 
     cast_expr =
                 (t.CAST > '(' > expr > t.AS > type_name > ')')
@@ -456,7 +522,8 @@ SqlGrammar<Iterator, Skipper>::SqlGrammar( const Tokens &t)
     DISSEQT_DEBUG_NODE( opt_not);
 
     signed_number =
-                -(lit('-')|'+') >> t.NUMERIC_LITERAL
+                ('-' >> attr(true) | '+' >> attr( false) | eps >> attr(false))
+            >>  numeric_literal
             ;
     DISSEQT_DEBUG_NODE( signed_number);
 

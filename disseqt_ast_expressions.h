@@ -67,6 +67,17 @@ namespace disseqt {
             boost::recursive_wrapper<select> select_statement;
         };
 
+        struct null {};
+
+        struct literal_tag {};
+        struct string_literal_tag :  public literal_tag {};
+        struct numeric_literal_tag : public literal_tag {};
+        struct blob_literal_tag :    public literal_tag {};
+
+        typedef text<string_literal_tag>    string_literal;
+        typedef text<blob_literal_tag>      blob_literal;
+        typedef text<numeric_literal_tag>   numeric_literal;
+
         typedef boost::variant<
                 boost::recursive_wrapper<ternary_op>,
                 boost::recursive_wrapper<binary_op>,
@@ -74,16 +85,33 @@ namespace disseqt {
                 boost::recursive_wrapper<case_expression>,
                 boost::recursive_wrapper<function_call>,
                 boost::recursive_wrapper<cast>,
-                boost::recursive_wrapper<select>,
+                boost::recursive_wrapper<set_expression>,
+                string_literal,
+                numeric_literal,
+                blob_literal,
                 composite_column_name,
-                exists
+                exists,
+                null
                 >
                 expression;
+
+        typedef boost::variant<
+                boost::recursive_wrapper<composite_table_name>,
+                std::vector<expression>,
+                boost::recursive_wrapper< select>
+                >
+                set_expression;
 
         struct unary_op
         {
             operator_type op;
             expression    e1;
+        };
+
+        struct signed_number
+        {
+            bool            minus;
+            numeric_literal literal;
         };
 
         struct binary_op
@@ -139,8 +167,20 @@ namespace disseqt {
             expression  expr;
             type_name   type;
         };
+
     }
 }
+
+BOOST_FUSION_ADAPT_STRUCT(
+        disseqt::ast::type_name,
+        (std::vector< disseqt::ast::generic_name>, names)
+        )
+
+BOOST_FUSION_ADAPT_STRUCT(
+        disseqt::ast::function_arguments,
+        (bool, distinct)
+        (std::vector<disseqt::ast::expression>, arguments)
+    )
 
 BOOST_FUSION_ADAPT_STRUCT(
         disseqt::ast::function_call,
@@ -183,7 +223,8 @@ BOOST_FUSION_ADAPT_STRUCT(
 BOOST_FUSION_ADAPT_STRUCT(
         disseqt::ast::case_expression,
         (boost::optional<disseqt::ast::expression>,   case_expression)
-        (std::vector<disseqt::ast::when_op>,          when_expression)
+        (std::vector<disseqt::ast::when_op>,          when_expressions)
+        (boost::optional<disseqt::ast::expression>,   else_expression)
         )
 
 BOOST_FUSION_ADAPT_STRUCT(
@@ -192,4 +233,9 @@ BOOST_FUSION_ADAPT_STRUCT(
         (disseqt::ast::expression, then)
         )
 
+BOOST_FUSION_ADAPT_STRUCT(
+        disseqt::ast::signed_number,
+        (bool, minus)
+        (disseqt::ast::numeric_literal, literal)
+)
 #endif /* DISSEQT_AST_EXPRESSIONS_H_ */
