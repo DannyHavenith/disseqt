@@ -44,7 +44,6 @@ namespace disseqt {
             Exists,
             In,
             Between,
-            Collate,
             Glob,
             Match,
             Regexp,
@@ -59,12 +58,14 @@ namespace disseqt {
         struct select_stmt;
         struct case_expression;
         struct function_call;
-        struct select;
+        struct select_statement;
         struct cast;
+        struct in;
+        struct collate;
 
         struct exists
         {
-            boost::recursive_wrapper<select> select_statement;
+            boost::recursive_wrapper<select_statement> select;
         };
 
         struct null {};
@@ -85,7 +86,9 @@ namespace disseqt {
                 boost::recursive_wrapper<case_expression>,
                 boost::recursive_wrapper<function_call>,
                 boost::recursive_wrapper<cast>,
-                boost::recursive_wrapper<set_expression>,
+                boost::recursive_wrapper<in>,
+                boost::recursive_wrapper<select_statement>,
+                boost::recursive_wrapper<collate>,
                 string_literal,
                 numeric_literal,
                 blob_literal,
@@ -98,9 +101,21 @@ namespace disseqt {
         typedef boost::variant<
                 boost::recursive_wrapper<composite_table_name>,
                 std::vector<expression>,
-                boost::recursive_wrapper< select>
+                boost::recursive_wrapper< select_statement>
                 >
                 set_expression;
+
+        struct in
+        {
+            expression      e;
+            set_expression  set;
+        };
+
+        struct collate
+        {
+            expression      e;
+            collation_name  name;
+        };
 
         struct unary_op
         {
@@ -217,7 +232,7 @@ BOOST_FUSION_ADAPT_STRUCT(
 
 BOOST_FUSION_ADAPT_STRUCT(
         disseqt::ast::exists,
-        (boost::recursive_wrapper<disseqt::ast::select>, select_statement)
+        (boost::recursive_wrapper<disseqt::ast::select_statement>, select)
         )
 
 BOOST_FUSION_ADAPT_STRUCT(
@@ -237,5 +252,11 @@ BOOST_FUSION_ADAPT_STRUCT(
         disseqt::ast::signed_number,
         (bool, minus)
         (disseqt::ast::numeric_literal, literal)
-)
+    )
+
+BOOST_FUSION_ADAPT_STRUCT(
+        disseqt::ast::in,
+        (disseqt::ast::expression,        e)
+        (disseqt::ast::set_expression,    set)
+    )
 #endif /* DISSEQT_AST_EXPRESSIONS_H_ */

@@ -40,7 +40,6 @@ namespace disseqt
             typedef qi::rule< Iterator, Value(), Locals, Skipper> t;
         };
 
-        rule column_list;
         rule insert_stmt;
         rule sql_stmt_list;
         rule sql_stmt;
@@ -58,15 +57,12 @@ namespace disseqt
         rule limit_clause;
         rule select_phrase;
         rule result_column;
-        rule values_clause;
         rule table_or_subquery;
         rule table_clause;
         rule index_clause;
         rule join_clause;
         rule join_operator;
         rule join_constraint;
-        rule with_clause;
-        rule common_table_expression;
         rule compound_operator;
         rule ordering_term;
         rule update_stmt;
@@ -74,12 +70,12 @@ namespace disseqt
         rule update_limited_clause;
         rule weasel_clause;
         rule bind_parameter;
-        rule comparison_rhs;
 
         typename Rule<ast::composite_table_name >::t composite_table_name;
         typename Rule<ast::composite_column_name>::t composite_column_name;
         typename Rule<ast::function_arguments   >::t function_arguments;
         typename Rule<ast::case_expression      >::t case_when;
+        typename Rule<ast::select_statement     >::t select_stmt;
         typename Rule<ast::function_name >::t function_name;
         typename Rule<ast::foreign_table >::t foreign_table;
         typename Rule<ast::index_name    >::t index_name;
@@ -100,7 +96,6 @@ namespace disseqt
         typename Rule<ast::operator_type >::t bitwise_operator;
         typename Rule<ast::operator_type >::t ineq_operator;
         typename Rule<ast::operator_type >::t comparison_operator;
-        typename Rule<ast::select        >::t select_stmt;
         typename Rule<ast::exists        >::t exists_expr;
         typename Rule<ast::type_name     >::t type_name;
         typename Rule<ast::cast          >::t cast_expr;
@@ -118,7 +113,12 @@ namespace disseqt
         typename Rule<ast::expression    >::t factor;
         typename Rule<ast::expression    >::t collate;
         typename Rule<ast::signed_number >::t signed_number;
-        typename Rule<ast::set_expression>::t set_expresion;
+        typename Rule<ast::set_expression>::t set_expression;
+        typename Rule<ast::values        >::t values_clause;
+        typename Rule<ast::compound_select>::t compound_select;
+        typename Rule<ast::with_clause   >::t with_clause;
+        typename Rule<ast::common_table_expression>::t common_table_expression;
+        typename Rule<ast::column_list   >::t column_list;
 
     };
 }

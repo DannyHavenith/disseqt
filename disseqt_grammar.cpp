@@ -8,9 +8,9 @@
 #include "disseqt_grammar.h"
 
 #include <boost/spirit/include/qi_attr.hpp>
-
 #include <boost/spirit/include/phoenix.hpp>
 #include <boost/spirit/include/qi_attr.hpp>
+#include <boost/spirit/include/qi_matches.hpp>
 #include <string>
 
 using namespace boost::spirit;
@@ -55,6 +55,24 @@ namespace {
 namespace disseqt
 {
 namespace {
+    ast::expression ternaryexp(
+            ast::operator_type op,
+            const ast::expression &e1,
+            const ast::expression &e2,
+            const ast::expression &e3,
+            bool negate = false
+            )
+    {
+        if (negate)
+        {
+            return ast::unary_op{ ast::Not, ternaryexp( op, e1, e2, e3, false)};
+        }
+        else
+        {
+            return ast::ternary_op{ op, e1, e2, e3};
+        }
+    }
+
     /// construct a binary expression
     ast::expression binexp(
             ast::operator_type op,
@@ -62,6 +80,35 @@ namespace {
             const ast::expression &right)
     {
         return ast::binary_op{ op, left, right};
+    }
+
+    ast::expression unaryexp( ast::operator_type op, const ast::expression &e, bool negate = false)
+    {
+        if (negate)
+        {
+            return ast::unary_op{ ast::Not, unaryexp( op, e, false)};
+        }
+        else
+        {
+            return ast::unary_op{ op, e};
+        }
+    }
+
+    ast::expression inexp( const ast::expression &e, const ast::set_expression &set, bool negate = false)
+    {
+        if (negate)
+        {
+            return ast::unary_op{ ast::Not, inexp( e, set, false)};
+        }
+        else
+        {
+            return ast::in{ e, set};
+        }
+    }
+
+    ast::expression collateexp( const ast::expression &e, const ast::collation_name &name)
+    {
+        return ast::collate{ e, name};
     }
 
 }
@@ -204,11 +251,16 @@ SqlGrammar<Iterator, Skipper>::SqlGrammar( const Tokens &t)
 
     select_stmt =
             -with_clause
-            >>  ( select_phrase | values_clause) % compound_operator
+            >>  compound_select
             >> -order_by_clause
             >> -limit_clause
             ;
     DISSEQT_DEBUG_NODE( select_stmt);
+
+    compound_select =
+                ( select_phrase | values_clause) % compound_operator
+            ;
+    DISSEQT_DEBUG_NODE( compound_select);
 
     order_by_clause =
             t.ORDER >> t.BY >> ordering_term % ','
@@ -289,7 +341,7 @@ SqlGrammar<Iterator, Skipper>::SqlGrammar( const Tokens &t)
     DISSEQT_DEBUG_NODE( column_list);
 
     with_clause =
-            t.WITH > -t.RECURSIVE >> common_table_expression %','
+            omit[t.WITH] > (matches[t.RECURSIVE] >> common_table_expression %',')
             ;
     DISSEQT_DEBUG_NODE( with_clause);
 
@@ -355,22 +407,16 @@ SqlGrammar<Iterator, Skipper>::SqlGrammar( const Tokens &t)
     and_operand =
                 compare_operand                             [_val = _1]
             >>  *(
-                        (opt_not >> t.BETWEEN >> equality_operand >> t.AND >> equality_operand)
-                    |   comparison_rhs
-                )
-
+                        (comparison_operator >> compare_operand) [_val = ph::bind( binexp, _1, _val, _2)]
+                    |   (opt_not >> t.IN >>  set_expression)     [_val = ph::bind( inexp, _val, _2, _1)]
+                    |   (opt_not >> t.BETWEEN >> compare_operand >> t.AND >> compare_operand) [_val = ph::bind( ternaryexp, Between, _val, _2, _3, _1)]
+                    |   (t.ISNULL)          [ _val = ph::bind( binexp, Equals,    _val, null{})]
+                    |   t.NOTNULL           [ _val = ph::bind( binexp, NotEquals, _val, null{})]
+                    |   t.NOT >> t.NULL_T   [ _val = ph::bind( binexp, NotEquals, _val, null{})]
+               )
             ;
     DISSEQT_DEBUG_NODE( and_operand);
 
-    comparison_rhs =
-                comparison_operator >> compare_operand
-            |   (t.ISNULL)          [ ph::bind( unaryexp, Equals, null)]
-            |   t.NOTNULL           [ ph::bind( unaryexp, NotEquals, null)]
-            |   t.NOT >> t.NULL_T   [ ph::bind( unaryexp, NotEquals, null)]
-            |   opt_not >> t.IN >>  set_expression
-            )
-            ;
-    DISSEQT_DEBUG_NODE( comparison_rhs);
 
     set_expression =
                 composite_table_name
@@ -391,7 +437,7 @@ SqlGrammar<Iterator, Skipper>::SqlGrammar( const Tokens &t)
             ;
     DISSEQT_DEBUG_NODE( comparison_operator);
 
-    equality_operand =
+    compare_operand =
             ineq_operand >> *( ineq_operator >> ineq_operand)
             ;
     DISSEQT_DEBUG_NODE( compare_operand);
@@ -431,7 +477,7 @@ SqlGrammar<Iterator, Skipper>::SqlGrammar( const Tokens &t)
 
     collate =
                 singular                        [_val = _1]
-            >>  -(t.COLLATE >> collation_name)  [_val = ph::bind(binexp, Collate, _val, _1)]
+            >>  -(t.COLLATE >> collation_name)  [_val = ph::bind(collateexp, _val, _1)]
             ;
     DISSEQT_DEBUG_NODE( collate);
 
