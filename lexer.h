@@ -48,6 +48,7 @@ namespace disseqt {
         void_token_def      SHRIGHT_OP;
         void_token_def      CONCAT_OP;
         void_token_def      UNKNOWN;
+        void_token_def      PERIOD;
 
         string_token_def    STRING;
         string_token_def    BLOB;

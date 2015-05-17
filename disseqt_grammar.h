@@ -70,6 +70,8 @@ namespace disseqt
         rule update_limited_clause;
         rule weasel_clause;
         rule bind_parameter;
+        rule dot;
+        rule star;
 
         typename Rule<ast::composite_table_name >::t composite_table_name;
         typename Rule<ast::composite_column_name>::t composite_column_name;
@@ -114,7 +116,7 @@ namespace disseqt
         typename Rule<ast::expression    >::t collate;
         typename Rule<ast::signed_number >::t signed_number;
         typename Rule<ast::set_expression>::t set_expression;
-        typename Rule<ast::values        >::t values_clause;
+        typename Rule<ast::values_clause        >::t values_clause;
         typename Rule<ast::compound_select>::t compound_select;
         typename Rule<ast::with_clause   >::t with_clause;
         typename Rule<ast::common_table_expression>::t common_table_expression;

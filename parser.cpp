@@ -8,7 +8,6 @@
 #include "disseqt_grammar.h"
 #include <iostream>
 #include <fstream>
-
 namespace disseqt
 {
 namespace qi = boost::spirit::qi;
@@ -52,7 +51,6 @@ bool parse( std::string::const_iterator &first, std::string::const_iterator last
  */
 void test( const std::string &filename)
 {
-
     std::string buffer;
     std::ifstream inputfile( filename);
 
@@ -105,6 +103,10 @@ int main(int argc, char *argv[])
     if (argc > 1)
     {
         disseqt::test( argv[1]);
+    }
+    else
+    {
+        std::cerr << "no arguments provided\n";
     }
     return 0;
 }

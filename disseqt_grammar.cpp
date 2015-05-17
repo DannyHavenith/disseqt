@@ -12,11 +12,13 @@
 #include <boost/spirit/include/qi_attr.hpp>
 #include <boost/spirit/include/qi_matches.hpp>
 #include <string>
+#include <iostream>
+#include <iomanip>
 
 using namespace boost::spirit;
 using namespace boost::spirit::ascii;
 
-//#define DISSEQT_DEBUG
+#define DISSEQT_DEBUG
 
 #if defined( DISSEQT_DEBUG)
 #    define DISSEQT_DEBUG_NODE( node_) node_.name( #node_); qi::debug( node_)
@@ -50,6 +52,24 @@ namespace {
                     >::type attribute_type;
         std::cout << typeid(attribute_type).name() << std::endl;
     }
+
+    struct debug_print
+    {
+        debug_print( const std::string &message)
+        : message( message)
+        {
+
+        }
+
+
+        template< typename A, typename B, typename C>
+        void operator()( const A&, const B&, const C&) const
+        {
+            std::cout << "debug: " << message << std::endl; // make sure the string gets flushed...
+        }
+
+        std::string message;
+    };
 }
 
 namespace disseqt
@@ -282,10 +302,13 @@ SqlGrammar<Iterator, Skipper>::SqlGrammar( const Tokens &t)
 
     result_column =
             '*'
-            |   table_name >> '.' >> '*'
-            |   expr >> -( -t.AS >> column_alias)
+            |   table_name >> dot >> '*'
+            |  eps [debug_print("alt")] >> expr >> -( -t.AS >> column_alias)
             ;
     DISSEQT_DEBUG_NODE( result_column);
+
+    star = char_( '*');
+    DISSEQT_DEBUG_NODE( star);
 
     values_clause =
             t.VALUES > ('(' >> expr % ',' >> ')') % ','
@@ -293,7 +316,7 @@ SqlGrammar<Iterator, Skipper>::SqlGrammar( const Tokens &t)
     DISSEQT_DEBUG_NODE( values_clause);
 
     table_or_subquery =
-            table_clause
+                table_clause
             |   '(' >> (table_or_subquery%',' | join_clause) >> ')'
             |   '(' >> select_stmt >> ')' >> -( -t.AS >> table_alias)
             ;
@@ -306,10 +329,13 @@ SqlGrammar<Iterator, Skipper>::SqlGrammar( const Tokens &t)
             ;
     DISSEQT_DEBUG_NODE( table_clause);
 
-    composite_table_name %=
-            -(database_name >> '.') >> table_name
+    composite_table_name =
+            -(database_name >> dot) >> table_name
             ;
     DISSEQT_DEBUG_NODE( composite_table_name);
+
+    dot = char_('.');
+    DISSEQT_DEBUG_NODE( dot);
 
     index_clause =
             t.NOT >> t.INDEXED | t.INDEXED >> t.BY >> index_name
@@ -365,7 +391,7 @@ SqlGrammar<Iterator, Skipper>::SqlGrammar( const Tokens &t)
 
     update_stmt =
             -with_clause >> t.UPDATE > -weasel_clause >> qualified_table_name
-            >   t.SET >> (column_name >> '=' > expr)%',' >> -(t.WHERE > expr)
+            >   t.SET >> (column_name >> '=' >> expr)%',' >> -(t.WHERE > expr)
             >>  -update_limited_clause
             ;
     DISSEQT_DEBUG_NODE( update_stmt);
@@ -392,7 +418,7 @@ SqlGrammar<Iterator, Skipper>::SqlGrammar( const Tokens &t)
     ;
     DISSEQT_DEBUG_NODE( weasel_clause);
 
-    expr =
+    expr = eps [debug_print("term")] >>
                 or_operand              [_val = _1]
             >>  *( t.OR >> or_operand)  [_val = ph::bind( binexp, Or, _val, _1)]
             ;
@@ -463,25 +489,25 @@ SqlGrammar<Iterator, Skipper>::SqlGrammar( const Tokens &t)
             ;
     DISSEQT_DEBUG_NODE( bitwise_operand);
 
-    term =
+    term = eps [debug_print("term")] >>
                 factor [_val = _1]
             >> *( multiplicative_operator >> factor) [_val = ph::bind( binexp, _1, _val, _2)]
             ;
     DISSEQT_DEBUG_NODE( term);
 
-    factor =
+    factor = eps [debug_print("factor")] >>
                 collate [_val = _1]
             >>  *( t.CONCAT_OP >> collate [_val = ph::bind( binexp, Concat, _val, _1)])
             ;
     DISSEQT_DEBUG_NODE( factor);
 
-    collate =
+    collate = eps [debug_print("collate")] >>
                 singular                        [_val = _1]
             >>  -(t.COLLATE >> collation_name)  [_val = ph::bind(collateexp, _val, _1)]
             ;
     DISSEQT_DEBUG_NODE( collate);
 
-    singular =
+    singular = eps [debug_print("singular")] >>
                 exists_expr
             |   case_when
             |   cast_expr
@@ -646,6 +672,10 @@ struct GrammarInstantiator
 
 }
 
+typedef disseqt::LexerTypes< std::string::const_iterator> InstantiatedLexerTypes;
+typedef typename InstantiatedLexerTypes::iterator_type lexer_iterator;
+typedef disseqt::Lexer<typename InstantiatedLexerTypes::base_lexer_type> LexerType;
+template disseqt::SqlGrammar< lexer_iterator>::SqlGrammar( const LexerType &);
 template class disseqt::GrammarInstantiator<std::string::const_iterator>;
 
 
