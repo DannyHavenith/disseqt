@@ -22,7 +22,6 @@ namespace disseqt
          GE_OP(">="),
          SHLEFT_OP("<<"),
          SHRIGHT_OP(">>"),
-         PERIOD('.'),
          CONCAT_OP("\\|\\|"),
          UNKNOWN("."),
          NULL_T("(?s:NULL)")
@@ -58,8 +57,8 @@ namespace disseqt
              (COMMENT)
              (SKIPPER)
              (STRING)
-             ('(')(')')('+')('-')('*')('/')('%')('=')('>')('<')('&')('|')(';')(',')('~')
-             (EQ_OP)(NEQ_OP)(LE_OP)(GE_OP)(SHLEFT_OP)(SHRIGHT_OP)(CONCAT_OP)(PERIOD)
+             ('(')(')')('+')('-')('*')('/')('%')('=')('>')('<')('&')('|')(';')('.')(',')('~')
+             (EQ_OP)(NEQ_OP)(LE_OP)(GE_OP)(SHLEFT_OP)(SHRIGHT_OP)(CONCAT_OP)
              (UNKNOWN);
      }
 

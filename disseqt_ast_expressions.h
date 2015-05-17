@@ -80,6 +80,11 @@ namespace disseqt {
         typedef text<numeric_literal_tag>   numeric_literal;
 
         typedef boost::variant<
+                string_literal,
+                numeric_literal,
+                blob_literal,
+                composite_column_name,
+                exists,
                 boost::recursive_wrapper<ternary_op>,
                 boost::recursive_wrapper<binary_op>,
                 boost::recursive_wrapper<unary_op>,
@@ -89,11 +94,6 @@ namespace disseqt {
                 boost::recursive_wrapper<in>,
                 boost::recursive_wrapper<select_statement>,
                 boost::recursive_wrapper<collate>,
-                string_literal,
-                numeric_literal,
-                blob_literal,
-                composite_column_name,
-                exists,
                 null
                 >
                 expression;

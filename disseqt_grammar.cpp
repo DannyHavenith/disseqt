@@ -18,7 +18,7 @@
 using namespace boost::spirit;
 using namespace boost::spirit::ascii;
 
-#define DISSEQT_DEBUG
+//#define DISSEQT_DEBUG
 
 #if defined( DISSEQT_DEBUG)
 #    define DISSEQT_DEBUG_NODE( node_) node_.name( #node_); qi::debug( node_)
@@ -60,7 +60,6 @@ namespace {
         {
 
         }
-
 
         template< typename A, typename B, typename C>
         void operator()( const A&, const B&, const C&) const
@@ -302,13 +301,10 @@ SqlGrammar<Iterator, Skipper>::SqlGrammar( const Tokens &t)
 
     result_column =
             '*'
-            |   table_name >> dot >> '*'
-            |  eps [debug_print("alt")] >> expr >> -( -t.AS >> column_alias)
+            |   table_name >> '.' >> '*'
+            |   expr >> -( -t.AS >> column_alias)
             ;
     DISSEQT_DEBUG_NODE( result_column);
-
-    star = char_( '*');
-    DISSEQT_DEBUG_NODE( star);
 
     values_clause =
             t.VALUES > ('(' >> expr % ',' >> ')') % ','
@@ -330,12 +326,9 @@ SqlGrammar<Iterator, Skipper>::SqlGrammar( const Tokens &t)
     DISSEQT_DEBUG_NODE( table_clause);
 
     composite_table_name =
-            -(database_name >> dot) >> table_name
+            -(database_name >> '.') >> table_name
             ;
     DISSEQT_DEBUG_NODE( composite_table_name);
-
-    dot = char_('.');
-    DISSEQT_DEBUG_NODE( dot);
 
     index_clause =
             t.NOT >> t.INDEXED | t.INDEXED >> t.BY >> index_name
@@ -418,7 +411,7 @@ SqlGrammar<Iterator, Skipper>::SqlGrammar( const Tokens &t)
     ;
     DISSEQT_DEBUG_NODE( weasel_clause);
 
-    expr = eps [debug_print("term")] >>
+    expr =
                 or_operand              [_val = _1]
             >>  *( t.OR >> or_operand)  [_val = ph::bind( binexp, Or, _val, _1)]
             ;
@@ -489,25 +482,25 @@ SqlGrammar<Iterator, Skipper>::SqlGrammar( const Tokens &t)
             ;
     DISSEQT_DEBUG_NODE( bitwise_operand);
 
-    term = eps [debug_print("term")] >>
+    term =
                 factor [_val = _1]
             >> *( multiplicative_operator >> factor) [_val = ph::bind( binexp, _1, _val, _2)]
             ;
     DISSEQT_DEBUG_NODE( term);
 
-    factor = eps [debug_print("factor")] >>
+    factor =
                 collate [_val = _1]
             >>  *( t.CONCAT_OP >> collate [_val = ph::bind( binexp, Concat, _val, _1)])
             ;
     DISSEQT_DEBUG_NODE( factor);
 
-    collate = eps [debug_print("collate")] >>
+    collate =
                 singular                        [_val = _1]
             >>  -(t.COLLATE >> collation_name)  [_val = ph::bind(collateexp, _val, _1)]
             ;
     DISSEQT_DEBUG_NODE( collate);
 
-    singular = eps [debug_print("singular")] >>
+    singular =
                 exists_expr
             |   case_when
             |   cast_expr

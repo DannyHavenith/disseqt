@@ -70,8 +70,6 @@ namespace disseqt
         rule update_limited_clause;
         rule weasel_clause;
         rule bind_parameter;
-        rule dot;
-        rule star;
 
         typename Rule<ast::composite_table_name >::t composite_table_name;
         typename Rule<ast::composite_column_name>::t composite_column_name;
