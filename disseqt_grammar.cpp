@@ -287,46 +287,51 @@ SqlGrammar<Iterator, Skipper>::SqlGrammar( const Tokens &t)
     DISSEQT_DEBUG_NODE( order_by_clause);
 
     limit_clause =
-            t.LIMIT >> expr >> -((t.OFFSET|',') >> expr)
+                t.LIMIT >> expr >> -((t.OFFSET|',') >> expr)
             ;
     DISSEQT_DEBUG_NODE( limit_clause);
 
     select_phrase =
-            t.SELECT > -(t.DISTINCT|t.ALL) > result_column%','
-            >>  -(t.FROM > (join_clause| table_or_subquery%','))
+                t.SELECT > omit[-(t.DISTINCT|t.ALL)] > result_column%','
+            >>  -(t.FROM > join_clause)
             >>  -(t.WHERE > expr)
-            >>  -(t.GROUP > t.BY > expr % ',' > -(t.HAVING > expr))
+            >>  -(t.GROUP > t.BY > expr % ','
+            >>  -(t.HAVING > expr))
             ;
     DISSEQT_DEBUG_NODE( select_phrase);
 
     result_column =
-            '*'
+                '*' >> attr( star{})
             |   table_name >> '.' >> '*'
-            |   expr >> -( -t.AS >> column_alias)
+            |   expression_alias
             ;
     DISSEQT_DEBUG_NODE( result_column);
 
+    expression_alias =
+                expr >> -( -t.AS >> column_alias)
+            ;
+    DISSEQT_DEBUG_NODE( expression_alias);
+
     values_clause =
-            t.VALUES > ('(' >> expr % ',' >> ')') % ','
+                t.VALUES > ('(' >> expr % ',' >> ')') % ','
             ;
     DISSEQT_DEBUG_NODE( values_clause);
 
     table_or_subquery =
                 table_clause
-            |   '(' >> (table_or_subquery%',' | join_clause) >> ')'
             |   '(' >> select_stmt >> ')' >> -( -t.AS >> table_alias)
             ;
     DISSEQT_DEBUG_NODE( table_or_subquery);
 
     table_clause =
-            composite_table_name
+                composite_table_name
             >>  -( -t.AS >> table_alias)
             >>  -index_clause
             ;
     DISSEQT_DEBUG_NODE( table_clause);
 
     composite_table_name =
-            -(database_name >> '.') >> table_name
+                -(database_name >> '.') >> table_name
             ;
     DISSEQT_DEBUG_NODE( composite_table_name);
 
@@ -336,13 +341,25 @@ SqlGrammar<Iterator, Skipper>::SqlGrammar( const Tokens &t)
     DISSEQT_DEBUG_NODE( index_clause);
 
     join_clause =
-            table_or_subquery >> *(join_operator >> table_or_subquery >> -join_constraint)
+                table_or_subquery >> *(join_expression)
             ;
     DISSEQT_DEBUG_NODE( join_clause);
 
+    join_expression =
+                join_operator >> table_or_subquery >> -join_constraint
+            ;
+    DISSEQT_DEBUG_NODE( join_expression);
+
     join_operator =
-            char_(',')
-            |   -t.NATURAL >> -( t.LEFT >> -t.OUTER | t.INNER | t.CROSS) >> t.JOIN
+                char_(',') [_val = ast::join_operator{false, Cross}]
+            |       matches[t.NATURAL]
+                >>  (
+                        t.LEFT >> -t.OUTER >> attr( Left)
+                    |   t.INNER            >> attr( Inner)
+                    |   t.CROSS            >> attr( Cross)
+                    |   eps                >> attr( Inner)
+                    )
+                >>  t.JOIN
             ;
     DISSEQT_DEBUG_NODE( join_operator);
 

@@ -26,21 +26,44 @@ namespace disseqt {
                 (table_name, table)
             )
 
-        struct where_clause {};
-        struct group_by_clause {};
 
-        struct join_operator {};
+        typedef std::vector<column_name> column_list;
+
+        enum JoinType
+        {
+            Inner,
+            Cross,
+            Left,
+            Right
+        };
+
+        BOOST_FUSION_DEFINE_STRUCT_INLINE(
+                join_operator,
+                (bool,     natural)
+                (JoinType, type)
+                )
+
+        typedef boost::variant<
+                expression,
+                column_list
+                >
+                join_constraint;
+
         struct table_or_subquery {};
-        struct join_constraint {};
 
         typedef boost::optional<index_name> index_clause;
 
         BOOST_FUSION_DEFINE_STRUCT_INLINE(
-                join_clause,
+                join_expression,
                 (join_operator,                     op)
-                (table_or_subquery,                 left)
                 (table_or_subquery,                 right)
                 (boost::optional<join_constraint>,  constraint)
+                )
+
+        BOOST_FUSION_DEFINE_STRUCT_INLINE(
+                join_clause,
+                (table_or_subquery,         first)
+                (std::vector<join_expression>,  joined)
                 )
 
         BOOST_FUSION_DEFINE_STRUCT_INLINE(
@@ -51,13 +74,8 @@ namespace disseqt {
                 )
 
         typedef boost::variant<
-                join_clause,
-                std::vector<table_or_subquery>
-            > from_clause;
-
-        typedef boost::variant<
                 star,
-                all_of_table,
+                table_name,
                 expression_alias
                 >
             result_column;
@@ -65,9 +83,10 @@ namespace disseqt {
         BOOST_FUSION_DEFINE_STRUCT_INLINE(
                 select_phrase,
                 (std::vector<result_column>,         columns)
-                (boost::optional< from_clause>,      from)
-                (boost::optional< where_clause>,     where)
-                (boost::optional< group_by_clause>,  group_by)
+//                (boost::optional< from_clause>,      from)
+//                (boost::optional< expression>,       where)
+//                (boost::optional< std::vector<expression>>,  group_by)
+//                (boost::optional< expression>,       having)
         )
 
         BOOST_FUSION_DEFINE_STRUCT_INLINE(
@@ -78,8 +97,6 @@ namespace disseqt {
         typedef boost::variant<values_clause, select_phrase> value_phrase;
 
         struct select_statement;
-
-        typedef std::vector<column_name> column_list;
 
         BOOST_FUSION_DEFINE_STRUCT_INLINE(
                 common_table_expression,

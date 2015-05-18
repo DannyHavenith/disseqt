@@ -69,6 +69,9 @@ namespace disseqt {
         };
 
         struct null {};
+        struct star {};
+        struct all {};
+        struct distinct {};
 
         struct literal_tag {};
         struct string_literal_tag :  public literal_tag {};
@@ -157,7 +160,6 @@ namespace disseqt {
             boost::optional<expression> else_expression;
         };
 
-        struct star {};
         struct function_arguments
         {
             bool distinct;
