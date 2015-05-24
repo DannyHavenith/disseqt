@@ -37,6 +37,21 @@ namespace disseqt {
             Right
         };
 
+        enum OrderType
+        {
+            Ascending,
+            Descending
+        };
+
+        BOOST_FUSION_DEFINE_STRUCT_INLINE(
+                ordering_term,
+                (expression,                        expr)
+                (boost::optional<collation_name>,   collation)
+                (OrderType,                         order))
+
+        typedef std::vector< ordering_term>
+                    order_by_clause;
+
         BOOST_FUSION_DEFINE_STRUCT_INLINE(
                 join_operator,
                 (bool,     natural)
@@ -49,9 +64,22 @@ namespace disseqt {
                 >
                 join_constraint;
 
-        struct table_or_subquery {};
+        typedef boost::variant<
+                composite_table_name,
+                boost::recursive_wrapper< select_statement>
+                >
+                table_or_select_t;
 
-        typedef boost::optional<index_name> index_clause;
+        typedef boost::optional<index_name>
+                    index_clause;
+
+        BOOST_FUSION_DEFINE_STRUCT_INLINE(
+                table_or_subquery,
+                (table_or_select_t, table_or_select)
+                (boost::optional<table_alias>, alias)
+                (index_clause, index)
+                )
+
 
         BOOST_FUSION_DEFINE_STRUCT_INLINE(
                 join_expression,
@@ -66,13 +94,6 @@ namespace disseqt {
                 (std::vector<join_expression>,  joined)
                 )
 
-        BOOST_FUSION_DEFINE_STRUCT_INLINE(
-                table_clause,
-                (composite_table_name,          table)
-                (boost::optional<table_alias>,  alias)
-                (boost::optional<index_clause>, index)
-                )
-
         typedef boost::variant<
                 star,
                 table_name,
@@ -83,10 +104,10 @@ namespace disseqt {
         BOOST_FUSION_DEFINE_STRUCT_INLINE(
                 select_phrase,
                 (std::vector<result_column>,         columns)
-//                (boost::optional< from_clause>,      from)
-//                (boost::optional< expression>,       where)
-//                (boost::optional< std::vector<expression>>,  group_by)
-//                (boost::optional< expression>,       having)
+                (boost::optional< join_clause>,      from)
+                (boost::optional< expression>,       where)
+                (boost::optional< std::vector<expression>>,  group_by)
+                (boost::optional< expression>,       having)
         )
 
         BOOST_FUSION_DEFINE_STRUCT_INLINE(
@@ -106,8 +127,11 @@ namespace disseqt {
                 )
 
 
-        BOOST_FUSION_DEFINE_STRUCT_INLINE( order_by_clause, )
-        BOOST_FUSION_DEFINE_STRUCT_INLINE(limit_clause, )
+        BOOST_FUSION_DEFINE_STRUCT_INLINE(
+                limit_clause,
+                (expression, offset)
+                (expression, limit)
+                )
 
         typedef std::vector<value_phrase> compound_select;
 

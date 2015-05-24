@@ -277,28 +277,35 @@ SqlGrammar<Iterator, Skipper>::SqlGrammar( const Tokens &t)
     DISSEQT_DEBUG_NODE( select_stmt);
 
     compound_select =
-                ( select_phrase | values_clause) % compound_operator
+                ( select_core | values_clause) % compound_operator
             ;
     DISSEQT_DEBUG_NODE( compound_select);
 
     order_by_clause =
-            t.ORDER >> t.BY >> ordering_term % ','
+            omit[t.ORDER >> t.BY] > ordering_term % ','
             ;
     DISSEQT_DEBUG_NODE( order_by_clause);
 
     limit_clause =
-                t.LIMIT >> expr >> -((t.OFFSET|',') >> expr)
+                t.LIMIT
+            >   expr                 [ph::at_c<1>( _val) = _1]
+            >>  (
+                    t.OFFSET >> expr [ph::at_c<0>(_val) = _1]
+                |   ','      >> expr [ph::at_c<0>(_val) = _1][ph::swap( ph::at_c<0>(_val), ph::at_c<1>(_val))]
+                |   eps              [ph::at_c<0>(_val) = null{} ]
+                )
             ;
     DISSEQT_DEBUG_NODE( limit_clause);
 
-    select_phrase =
+    // todo: implement distinct (as boolean?).
+    select_core =
                 t.SELECT > omit[-(t.DISTINCT|t.ALL)] > result_column%','
             >>  -(t.FROM > join_clause)
             >>  -(t.WHERE > expr)
-            >>  -(t.GROUP > t.BY > expr % ','
-            >>  -(t.HAVING > expr))
+            >>  -(omit[t.GROUP > t.BY] > expr % ',')
+            >>  -(t.HAVING > expr)
             ;
-    DISSEQT_DEBUG_NODE( select_phrase);
+    DISSEQT_DEBUG_NODE( select_core);
 
     result_column =
                 '*' >> attr( star{})
@@ -317,18 +324,15 @@ SqlGrammar<Iterator, Skipper>::SqlGrammar( const Tokens &t)
             ;
     DISSEQT_DEBUG_NODE( values_clause);
 
+    // this is a simplification: index clause can only appear after a
+    // composite table name, not after a select
     table_or_subquery =
-                table_clause
-            |   '(' >> select_stmt >> ')' >> -( -t.AS >> table_alias)
+                 (composite_table_name |   '(' >> select_stmt >> ')')
+             >>  -( -t.AS >> table_alias)
+             >>  -index_clause
             ;
     DISSEQT_DEBUG_NODE( table_or_subquery);
 
-    table_clause =
-                composite_table_name
-            >>  -( -t.AS >> table_alias)
-            >>  -index_clause
-            ;
-    DISSEQT_DEBUG_NODE( table_clause);
 
     composite_table_name =
                 -(database_name >> '.') >> table_name
@@ -336,12 +340,14 @@ SqlGrammar<Iterator, Skipper>::SqlGrammar( const Tokens &t)
     DISSEQT_DEBUG_NODE( composite_table_name);
 
     index_clause =
-            t.NOT >> t.INDEXED | t.INDEXED >> t.BY >> index_name
+                omit[t.NOT >> t.INDEXED]
+            |   omit[t.INDEXED >> t.BY] >> index_name
             ;
     DISSEQT_DEBUG_NODE( index_clause);
 
     join_clause =
-                table_or_subquery >> *(join_expression)
+                table_or_subquery
+            >>  *(join_expression)
             ;
     DISSEQT_DEBUG_NODE( join_clause);
 
@@ -395,7 +401,9 @@ SqlGrammar<Iterator, Skipper>::SqlGrammar( const Tokens &t)
     DISSEQT_DEBUG_NODE( compound_operator);
 
     ordering_term =
-            expr >> -(t.COLLATE > collation_name) >> -(t.ASC | t.DESC)
+                expr
+            >>  -(t.COLLATE > collation_name)
+            >>  (omit[t.ASC] >> attr(Ascending)| omit[t.DESC] >> attr(Descending) | eps >> attr(Ascending))
             ;
     DISSEQT_DEBUG_NODE( ordering_term);
 

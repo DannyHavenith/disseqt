@@ -53,13 +53,7 @@ namespace disseqt
         rule foreign_key_clause;
         rule table_constraint;
         rule indexed_column;
-        rule order_by_clause;
-        rule limit_clause;
-        rule table_or_subquery;
-        rule table_clause;
-        rule index_clause;
         rule compound_operator;
-        rule ordering_term;
         rule update_stmt;
         rule qualified_table_name;
         rule update_limited_clause;
@@ -115,15 +109,17 @@ namespace disseqt
         typename Rule<ast::common_table_expression>::t common_table_expression;
         typename Rule<ast::column_list      >::t column_list;
         typename Rule<ast::expression_alias >::t expression_alias;
-//        typename Rule<ast::select_phrase    >::t select_phrase;
-        rule select_phrase;
+        typename Rule<ast::select_phrase    >::t select_core;
         typename Rule<ast::result_column    >::t result_column;
         typename Rule<ast::join_constraint  >::t join_constraint;
         typename Rule<ast::join_operator    >::t join_operator;
-//        typename Rule<ast::join_clause      >::t join_clause;
-        rule join_clause;
-        rule join_expression;
-
+        typename Rule<ast::index_clause     >::t index_clause;
+        typename Rule<ast::table_or_subquery>::t table_or_subquery;
+        typename Rule<ast::join_clause      >::t join_clause;
+        typename Rule<ast::join_expression  >::t join_expression;
+        typename Rule<ast::ordering_term    >::t ordering_term;
+        typename Rule<ast::order_by_clause  >::t order_by_clause;
+        typename Rule<ast::limit_clause     >::t limit_clause;
     };
 }
 #endif /* DISSEQT_GRAMMAR_H_ */
