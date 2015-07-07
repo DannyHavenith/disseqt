@@ -55,7 +55,6 @@ namespace disseqt {
         struct ternary_op;
         struct binary_op;
         struct unary_op;
-        struct select_stmt;
         struct case_expression;
         struct function_call;
         struct select_statement;

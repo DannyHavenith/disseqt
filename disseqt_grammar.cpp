@@ -201,17 +201,17 @@ SqlGrammar<Iterator, Skipper>::SqlGrammar( const Tokens &t)
 
     create_table_stmt =
                 t.CREATE >> matches[t.TEMP|t.TEMPORARY] >> t.TABLE
-            >   -(t.IF > t.NOT > t.EXISTS)
+            >   matches[t.IF > t.NOT > t.EXISTS]
             >>  composite_table_name
             >>  (
                     (t.AS > select_stmt)
-                    |   ('(' >> column_def%',' >> -(',' >> table_constraint%',') > ')' >> -( t.WITHOUT > t.IDENTIFIER))
+                    |   ('(' >> column_def%',' >> omit[-(',' >> table_constraint%',')] > ')' >> matches[ t.WITHOUT > t.IDENTIFIER])
             )
             ;
     DISSEQT_DEBUG_NODE( create_table_stmt);
 
     column_def =
-            column_name >> -type_name >> *column_constraint
+            column_name >> -type_name >> omit[*column_constraint]
             ;
     DISSEQT_DEBUG_NODE( column_def);
 

@@ -44,8 +44,6 @@ namespace disseqt
         rule sql_stmt;
         rule explain_stmt;
         rule stmt;
-        rule create_table_stmt;
-        rule column_def;
         rule column_constraint;
         rule literal_value;
         rule conflict_clause;
@@ -118,11 +116,12 @@ namespace disseqt
         typename Rule<ast::ordering_term    >::t ordering_term;
         typename Rule<ast::order_by_clause  >::t order_by_clause;
         typename Rule<ast::limit_clause     >::t limit_clause;
-        //rule weasel_clause;
         typename Rule<ast::InsertType       >::t weasel_clause;
         typename Rule<ast::InsertType       >::t insert_type;
         typename Rule<ast::insert_values    >::t insert_values;
         typename Rule<ast::insert_stmt      >::t insert_stmt;
+        typename Rule<ast::create_table_stmt>::t create_table_stmt;
+        typename Rule<ast::column_def       >::t column_def;
 };
 }
 #endif /* DISSEQT_GRAMMAR_H_ */

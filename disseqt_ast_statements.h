@@ -179,27 +179,36 @@ namespace disseqt {
             insert_values                   values;
         };
 
-        struct create_table_stmt
-        {
-            bool temporary;
-            bool if_not_exist;
-            composite_table_name table_name;
-        };
+        BOOST_FUSION_DEFINE_STRUCT_INLINE(
+                column_def,
+                (column_name,                   column)
+                (boost::optional<type_name>,    type)
+        )
 
         BOOST_FUSION_DEFINE_STRUCT_INLINE(
-                update_stmt,
-                (boost::optional< with_clause>, with)
-                (boost::optional<weasel_clause>, weasel_clause)
-                ()
+                table_spec,
+                (std::vector<column_def>,   columns)
+                (bool,                      without_identifier)
                 )
+
+        typedef boost::variant<
+                select_statement,
+                table_spec> table_def;
+
+        BOOST_FUSION_DEFINE_STRUCT_INLINE(
+            create_table_stmt,
+            (bool,                  temporary)
+            (bool,                  if_not_exist)
+            (composite_table_name,  table_name)
+            (table_def,             definition)
+        )
+
 //        BOOST_FUSION_DEFINE_STRUCT_INLINE(
-//                insert_stmt,
+//                update_stmt,
 //                (boost::optional< with_clause>, with)
-//                (InsertType,                    insert_type)
-//                (composite_table_name,          table)
-//                (boost::optional<column_list>,  columns)
-//                (insert_values,                 values)
-//            )
+//                (boost::optional<weasel_clause>, weasel_clause)
+//
+//                )
 
         typedef boost::variant<
                 select_statement,
@@ -224,11 +233,11 @@ namespace disseqt {
 
 BOOST_FUSION_ADAPT_STRUCT(
         disseqt::ast::insert_stmt,
-        (boost::optional< disseqt::ast::with_clause>, with)
-        (disseqt::ast::InsertType,      insert_type)
-        (disseqt::ast::composite_table_name, table)
-        (boost::optional<disseqt::ast::column_list>,  columns)
-        (disseqt::ast::insert_values,   values)
+        (boost::optional< disseqt::ast::with_clause>,   with)
+        (disseqt::ast::InsertType,                      insert_type)
+        (disseqt::ast::composite_table_name,            table)
+        (boost::optional<disseqt::ast::column_list>,    columns)
+        (disseqt::ast::insert_values,                   values)
     )
 
 
