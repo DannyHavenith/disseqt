@@ -27,6 +27,7 @@ using namespace boost::spirit::ascii;
 #endif
 #define DISSEQT_PARSER_KEYWORD_ALTERNATIVE( r, type, keyword) |  t.keyword
 
+// some printf-style debug functions.
 namespace {
     namespace spirit = boost::spirit;
     template <typename Expr, typename Iterator = spirit::unused_type>
@@ -74,6 +75,9 @@ namespace {
 namespace disseqt
 {
 namespace {
+
+    /// Utility function to create a ternary expression. Currently only used for the
+    /// <e1> BETWEEN <e2> AND <e3>
     ast::expression ternaryexp(
             ast::operator_type op,
             const ast::expression &e1,
@@ -101,6 +105,7 @@ namespace {
         return ast::binary_op{ op, left, right};
     }
 
+
     ast::expression unaryexp( ast::operator_type op, const ast::expression &e, bool negate = false)
     {
         if (negate)
@@ -113,6 +118,7 @@ namespace {
         }
     }
 
+    // construct an IN expression, as in <e> IN <set>
     ast::expression inexp( const ast::expression &e, const ast::set_expression &set, bool negate = false)
     {
         if (negate)
@@ -157,26 +163,44 @@ SqlGrammar<Iterator, Skipper>::SqlGrammar( const Tokens &t)
 
     stmt =  /* TODO: finish */
             update_stmt
-            |   select_stmt
-            |   create_table_stmt
-            |   insert_stmt
-            ;
+        |   select_stmt
+        |   create_table_stmt
+        |   insert_stmt
+        ;
     DISSEQT_DEBUG_NODE( stmt);
+
+    display_attribute_of_parser(
+            -with_clause
+        >>  insert_type >> omit[t.INTO]
+        >>  composite_table_name
+        >>  -column_list
+        >>  insert_values);
 
     insert_stmt =
             -with_clause
-            >>  (t.REPLACE | t.INSERT >> -weasel_clause) > t.INTO
-            >   composite_table_name >> -column_list
-            >>  (
-                    values_clause
-                    |   select_stmt
-                    |   (t.DEFAULT > t.VALUES)
-            )
-            ;
+        >>  insert_type >> omit[t.INTO]
+        >>  composite_table_name
+        >>  -column_list
+        >>  insert_values
+        ;
     DISSEQT_DEBUG_NODE( insert_stmt);
 
+    // insert_type is "REPLACE" or "INSERT" with an optional weasel clause ("OR ABORT|ROLLBACK, etc.").
+    insert_type =
+                omit[t.REPLACE] >> attr( Replace)
+            |   t.INSERT >> weasel_clause
+            ;
+    DISSEQT_DEBUG_NODE( insert_type);
+
+    insert_values =
+            values_clause
+        |   select_stmt
+        |   (t.DEFAULT > t.VALUES > attr( default_values{}))
+        ;
+    DISSEQT_DEBUG_NODE( insert_values);
+
     create_table_stmt =
-            t.CREATE >> -(t.TEMP|t.TEMPORARY) >> t.TABLE
+                t.CREATE >> matches[t.TEMP|t.TEMPORARY] >> t.TABLE
             >   -(t.IF > t.NOT > t.EXISTS)
             >>  composite_table_name
             >>  (
@@ -408,7 +432,7 @@ SqlGrammar<Iterator, Skipper>::SqlGrammar( const Tokens &t)
     DISSEQT_DEBUG_NODE( ordering_term);
 
     update_stmt =
-            -with_clause >> t.UPDATE > -weasel_clause >> qualified_table_name
+            -with_clause >> t.UPDATE > -weasel_clause > qualified_table_name
             >   t.SET >> (column_name >> '=' >> expr)%',' >> -(t.WHERE > expr)
             >>  -update_limited_clause
             ;
@@ -425,14 +449,15 @@ SqlGrammar<Iterator, Skipper>::SqlGrammar( const Tokens &t)
     DISSEQT_DEBUG_NODE( update_limited_clause);
 
     weasel_clause =
-            t.OR >
-    (
-            t.ROLLBACK
-            |   t.ABORT
-            |   t.REPLACE
-            |   t.FAIL
-            |   t.IGNORE
-    )
+                omit[t.OR] >
+                    (
+                        omit[t.ROLLBACK]  >> attr( InsertRollback)
+                    |   omit[t.ABORT]     >> attr( InsertAbort)
+                    |   omit[t.REPLACE]   >> attr( Replace)
+                    |   omit[t.FAIL]      >> attr( InsertFail)
+                    |   omit[t.IGNORE]    >> attr( InsertIgnore)
+                    ) [_val = _1]
+            |   eps >> attr( Insert)
     ;
     DISSEQT_DEBUG_NODE( weasel_clause);
 

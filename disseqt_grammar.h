@@ -40,7 +40,6 @@ namespace disseqt
             typedef qi::rule< Iterator, Value(), Locals, Skipper> t;
         };
 
-        rule insert_stmt;
         rule sql_stmt_list;
         rule sql_stmt;
         rule explain_stmt;
@@ -57,7 +56,6 @@ namespace disseqt
         rule update_stmt;
         rule qualified_table_name;
         rule update_limited_clause;
-        rule weasel_clause;
         rule bind_parameter;
 
         typename Rule<ast::composite_table_name >::t composite_table_name;
@@ -120,6 +118,11 @@ namespace disseqt
         typename Rule<ast::ordering_term    >::t ordering_term;
         typename Rule<ast::order_by_clause  >::t order_by_clause;
         typename Rule<ast::limit_clause     >::t limit_clause;
-    };
+        //rule weasel_clause;
+        typename Rule<ast::InsertType       >::t weasel_clause;
+        typename Rule<ast::InsertType       >::t insert_type;
+        typename Rule<ast::insert_values    >::t insert_values;
+        typename Rule<ast::insert_stmt      >::t insert_stmt;
+};
 }
 #endif /* DISSEQT_GRAMMAR_H_ */

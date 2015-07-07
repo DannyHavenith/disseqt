@@ -12,7 +12,6 @@
 
 namespace disseqt {
     namespace ast {
-        struct compound_operator {};
 
         BOOST_FUSION_DEFINE_STRUCT_INLINE(
                 expression_alias,
@@ -35,6 +34,17 @@ namespace disseqt {
             Cross,
             Left,
             Right
+        };
+
+        enum InsertType
+        {
+            Insert,
+            InsertRollback,
+            InsertAbort,
+            InsertReplace,
+            InsertFail,
+            InsertIgnore,
+            Replace
         };
 
         enum OrderType
@@ -115,7 +125,9 @@ namespace disseqt {
                 (std::vector< expression>, v)
         )
 
-        typedef boost::variant<values_clause, select_phrase> value_phrase;
+
+        struct default_values {};
+
 
         struct select_statement;
 
@@ -133,6 +145,8 @@ namespace disseqt {
                 (expression, limit)
                 )
 
+        typedef boost::variant<values_clause, select_phrase> value_phrase;
+        typedef boost::variant<values_clause, select_statement, default_values> insert_values;
         typedef std::vector<value_phrase> compound_select;
 
         BOOST_FUSION_DEFINE_STRUCT_INLINE(
@@ -153,11 +167,45 @@ namespace disseqt {
             (boost::optional<limit_clause>,       limit)
         )
 
+        // for some reason, the DEFINE_STRUCT_INLINE macro
+        // had some misalignment issues, so we're doing the hard-core ADAPT_STRUCT thing
+        // here.
+        struct insert_stmt
+        {
+            boost::optional< with_clause>   with;
+            InsertType                      insert_type;
+            composite_table_name            table;
+            boost::optional<column_list>    columns;
+            insert_values                   values;
+        };
+
+        struct create_table_stmt
+        {
+            bool temporary;
+            bool if_not_exist;
+            composite_table_name table_name;
+        };
+
+        BOOST_FUSION_DEFINE_STRUCT_INLINE(
+                update_stmt,
+                (boost::optional< with_clause>, with)
+                (boost::optional<weasel_clause>, weasel_clause)
+                ()
+                )
+//        BOOST_FUSION_DEFINE_STRUCT_INLINE(
+//                insert_stmt,
+//                (boost::optional< with_clause>, with)
+//                (InsertType,                    insert_type)
+//                (composite_table_name,          table)
+//                (boost::optional<column_list>,  columns)
+//                (insert_values,                 values)
+//            )
+
         typedef boost::variant<
                 select_statement,
                 update,
                 create_table,
-                insert
+                insert_stmt
                 > statement;
 
         BOOST_FUSION_DEFINE_STRUCT_INLINE(
@@ -173,6 +221,15 @@ namespace disseqt {
         }
 }
 }
+
+BOOST_FUSION_ADAPT_STRUCT(
+        disseqt::ast::insert_stmt,
+        (boost::optional< disseqt::ast::with_clause>, with)
+        (disseqt::ast::InsertType,      insert_type)
+        (disseqt::ast::composite_table_name, table)
+        (boost::optional<disseqt::ast::column_list>,  columns)
+        (disseqt::ast::insert_values,   values)
+    )
 
 
 
