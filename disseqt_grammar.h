@@ -26,7 +26,7 @@ namespace disseqt
 
 
     template< typename Iterator, typename Skipper = qi::rule<Iterator>>
-    struct SqlGrammar : qi::grammar<Iterator, Skipper>
+    struct SqlGrammar : qi::grammar<Iterator, ast::sql_stmt_list(), Skipper>
     {
         template< typename Tokens>
         SqlGrammar( const Tokens &t);
@@ -34,28 +34,25 @@ namespace disseqt
         typedef qi::rule<Iterator, Skipper> rule;
 
         // not using a type alias because it needs to work on gcc 4.6
-        template< typename Value, typename Locals = qi::locals<>>
+        template< typename Value>
         struct Rule
         {
-            typedef qi::rule< Iterator, Value(), Locals, Skipper> t;
+            typedef qi::rule< Iterator, Value(), Skipper> t;
         };
 
-        rule sql_stmt_list;
-        rule sql_stmt;
-        rule explain_stmt;
-        rule stmt;
         rule column_constraint;
         rule literal_value;
-        rule conflict_clause;
         rule foreign_key_clause;
         rule table_constraint;
         rule indexed_column;
         rule compound_operator;
-        rule update_stmt;
-        rule qualified_table_name;
-        rule update_limited_clause;
         rule bind_parameter;
 
+        typename Rule<ast::sql_stmt_list    >::t sql_stmt_list;
+        typename Rule<ast::sql_stmt         >::t sql_stmt;
+        typename Rule<ast::statement        >::t statement;
+        typename Rule<ast::explain_stmt     >::t explain_stmt;
+        typename Rule<ast::AlternateAction  >::t conflict_clause;
         typename Rule<ast::composite_table_name >::t composite_table_name;
         typename Rule<ast::composite_column_name>::t composite_column_name;
         typename Rule<ast::function_arguments   >::t function_arguments;
@@ -116,12 +113,18 @@ namespace disseqt
         typename Rule<ast::ordering_term    >::t ordering_term;
         typename Rule<ast::order_by_clause  >::t order_by_clause;
         typename Rule<ast::limit_clause     >::t limit_clause;
-        typename Rule<ast::InsertType       >::t weasel_clause;
-        typename Rule<ast::InsertType       >::t insert_type;
+        typename Rule<ast::AlternateAction  >::t weasel_clause;
+        typename Rule<ast::AlternateAction  >::t insert_type;
         typename Rule<ast::insert_values    >::t insert_values;
         typename Rule<ast::insert_stmt      >::t insert_stmt;
         typename Rule<ast::create_table_stmt>::t create_table_stmt;
         typename Rule<ast::column_def       >::t column_def;
+        typename Rule<ast::update_stmt      >::t update_stmt;
+        typename Rule<ast::qualified_table_name>::t qualified_table_name;
+        typename Rule<ast::update_limited_clause>::t update_limited_clause;
+        typename Rule<ast::column_assignment>::t column_assignment;
+        typename Rule<ast::column_assignments>::t column_assignments;
+
 };
 }
 #endif /* DISSEQT_GRAMMAR_H_ */

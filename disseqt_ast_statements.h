@@ -36,14 +36,13 @@ namespace disseqt {
             Right
         };
 
-        enum InsertType
+        enum AlternateAction
         {
-            Insert,
-            InsertRollback,
-            InsertAbort,
-            InsertReplace,
-            InsertFail,
-            InsertIgnore,
+            NoAlternate,
+            Rollback,
+            Abort,
+            Fail,
+            Ignore,
             Replace
         };
 
@@ -111,9 +110,11 @@ namespace disseqt {
                 >
             result_column;
 
+        typedef std::vector<result_column> columns;
+
         BOOST_FUSION_DEFINE_STRUCT_INLINE(
                 select_phrase,
-                (std::vector<result_column>,         columns)
+                (columns,         columns)
                 (boost::optional< join_clause>,      from)
                 (boost::optional< expression>,       where)
                 (boost::optional< std::vector<expression>>,  group_by)
@@ -155,10 +156,6 @@ namespace disseqt {
                 (std::vector<common_table_expression>, expressions)
                 )
 
-        struct update {};
-        struct create_table {};
-        struct insert {};
-
         BOOST_FUSION_DEFINE_STRUCT_INLINE(
             select_statement,
             (boost::optional< with_clause>,       with)
@@ -173,7 +170,7 @@ namespace disseqt {
         struct insert_stmt
         {
             boost::optional< with_clause>   with;
-            InsertType                      insert_type;
+            AlternateAction                 insert_type;
             composite_table_name            table;
             boost::optional<column_list>    columns;
             insert_values                   values;
@@ -203,38 +200,81 @@ namespace disseqt {
             (table_def,             definition)
         )
 
-//        BOOST_FUSION_DEFINE_STRUCT_INLINE(
-//                update_stmt,
-//                (boost::optional< with_clause>, with)
-//                (boost::optional<weasel_clause>, weasel_clause)
-//
-//                )
+        BOOST_FUSION_DEFINE_STRUCT_INLINE(
+                update_limited_clause,
+                (boost::optional<order_by_clause>,  order_by)
+                (limit_clause,                      limit)
+                )
+
+        BOOST_FUSION_DEFINE_STRUCT_INLINE(
+                qualified_table_name,
+                (composite_table_name, name)
+                (boost::optional<index_clause>, index)
+        )
+
+        struct column_assignment
+        {
+            column_name column;
+            expression value;
+        };
+
+
+        typedef std::vector<column_assignment> column_assignments;
+        struct update_stmt
+        {
+            boost::optional< with_clause> with;
+            AlternateAction weasel_clause;
+            qualified_table_name table;
+            column_assignments assignments;
+            boost::optional<expression> where;
+            boost::optional<update_limited_clause> limit;
+        };
+
 
         typedef boost::variant<
                 select_statement,
-                update,
-                create_table,
+                update_stmt,
+                create_table_stmt,
                 insert_stmt
                 > statement;
 
         BOOST_FUSION_DEFINE_STRUCT_INLINE(
-                explain,
-                (statement, s)
+                explain_stmt,
+                (statement, stmt)
             )
 
-        template< typename T>
-        typename std::enable_if< std::is_class<T>::value, std::ostream &>::type
-        operator<<( std::ostream &strm, const T &)
-        {
-            return strm << typeid(T).name();
-        }
+        typedef boost::variant<
+                statement,
+                explain_stmt>
+                sql_stmt;
+
+        typedef std::vector< sql_stmt>
+            sql_stmt_list;
+
+
 }
 }
 
 BOOST_FUSION_ADAPT_STRUCT(
+        disseqt::ast::column_assignment,
+        (disseqt::ast::column_name, column)
+        (disseqt::ast::expression, value)
+)
+
+BOOST_FUSION_ADAPT_STRUCT(
+        disseqt::ast::update_stmt,
+        (boost::optional< disseqt::ast::with_clause>, with)
+        (disseqt::ast::AlternateAction, weasel_clause)
+        (disseqt::ast::qualified_table_name, table)
+        (disseqt::ast::column_assignments, assignments)
+        (boost::optional<disseqt::ast::expression>, where)
+        (boost::optional<disseqt::ast::update_limited_clause>, limit)
+        )
+
+BOOST_FUSION_ADAPT_STRUCT(
         disseqt::ast::insert_stmt,
         (boost::optional< disseqt::ast::with_clause>,   with)
-        (disseqt::ast::InsertType,                      insert_type)
+        (disseqt::ast::AlternateAction,                      insert_type)
         (disseqt::ast::composite_table_name,            table)
         (boost::optional<disseqt::ast::column_list>,    columns)
         (disseqt::ast::insert_values,                   values)

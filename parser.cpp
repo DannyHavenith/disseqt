@@ -6,8 +6,11 @@
  */
 #include "lexer.h"
 #include "disseqt_grammar.h"
+#include "disseqt_ast_statements.h"
 #include <iostream>
 #include <fstream>
+
+#include "disseqt_ast_print.h"
 namespace disseqt
 {
 namespace qi = boost::spirit::qi;
@@ -15,7 +18,7 @@ namespace qi = boost::spirit::qi;
 /**
  * Parse a SQL query and report whether the parse succeeded.
  */
-bool parse( std::string::const_iterator &first, std::string::const_iterator last)
+bool parse( std::string::const_iterator &first, std::string::const_iterator last, ast::sql_stmt_list &statements)
 {
     typedef std::string::const_iterator Iterator;
     typedef LexerTypes<Iterator>::base_lexer_type BaseLexer;
@@ -27,7 +30,11 @@ bool parse( std::string::const_iterator &first, std::string::const_iterator last
 
     try
     {
-        return tokenize_and_phrase_parse( first, last, l, g, skipper, boost::spirit::qi::skip_flag::postskip);
+        return tokenize_and_phrase_parse(
+                first, last, l, g,
+                skipper,
+                boost::spirit::qi::skip_flag::postskip,
+                statements);
     }
     catch ( qi::expectation_failure<LexerTypes<Iterator>::iterator_type> &e)
     {
@@ -56,12 +63,14 @@ void test( const std::string &filename)
 
     size_t succeeded = 0;
     size_t failed = 0;
-    while (getline( inputfile, buffer))
+    ast::sql_stmt_list statements;
+
+    if (getline( inputfile, buffer))
     {
         try
         {
             auto first = buffer.cbegin();
-            if (!parse( first, buffer.cend()) || first != buffer.cend())
+            if (!parse( first, buffer.cend(), statements) || first != buffer.cend())
             {
                 ++failed;
                 std::cout << "**********\n";
@@ -73,6 +82,10 @@ void test( const std::string &filename)
             else
             {
                 ++succeeded;
+                if (!statements.empty())
+                {
+                    print( std::cout, statements[0]);
+                }
             }
         }
         catch ( qi::expectation_failure<std::string::const_iterator> &e)

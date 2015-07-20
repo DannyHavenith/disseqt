@@ -141,7 +141,7 @@ namespace {
 template< typename Iterator, typename Skipper>
 template< typename Tokens>
 SqlGrammar<Iterator, Skipper>::SqlGrammar( const Tokens &t)
-:SqlGrammar<Iterator, Skipper>::base_type( sql_stmt)
+:SqlGrammar<Iterator, Skipper>::base_type( sql_stmt_list)
 {
     namespace ph=boost::phoenix;
     using namespace ast;
@@ -152,29 +152,22 @@ SqlGrammar<Iterator, Skipper>::SqlGrammar( const Tokens &t)
 
     sql_stmt =
             explain_stmt
-            |   stmt
+            |   statement
             ;
     DISSEQT_DEBUG_NODE( sql_stmt);
 
     explain_stmt =
-            t.EXPLAIN > -( t.QUERY >> t.PLAN) >> stmt
+            omit[t.EXPLAIN > -( t.QUERY >> t.PLAN)] >> statement
             ;
     DISSEQT_DEBUG_NODE( explain_stmt);
 
-    stmt =  /* TODO: finish */
+    statement =
             update_stmt
         |   select_stmt
         |   create_table_stmt
         |   insert_stmt
         ;
-    DISSEQT_DEBUG_NODE( stmt);
-
-    display_attribute_of_parser(
-            -with_clause
-        >>  insert_type >> omit[t.INTO]
-        >>  composite_table_name
-        >>  -column_list
-        >>  insert_values);
+    DISSEQT_DEBUG_NODE( statement);
 
     insert_stmt =
             -with_clause
@@ -223,9 +216,9 @@ SqlGrammar<Iterator, Skipper>::SqlGrammar( const Tokens &t)
     column_constraint =
                 -(t.CONSTRAINT > name)
             >>  (
-                    (t.PRIMARY > t.KEY > -(t.ASC|t.DESC) >> -conflict_clause >> -t.AUTOINCREMENT)
-                    |   (t.NOT > t.NULL_T > -conflict_clause)
-                    |   (t.UNIQUE > -conflict_clause)
+                    (t.PRIMARY > t.KEY > -(t.ASC|t.DESC) >> conflict_clause >> -t.AUTOINCREMENT)
+                    |   (t.NOT > t.NULL_T > conflict_clause)
+                    |   (t.UNIQUE > conflict_clause)
                     |   (t.CHECK > '(' > expr > ')')
                     |   (t.DEFAULT > (signed_number|literal_value| ('(' > expr > ')')))
                     |   (t.COLLATE > collation_name)
@@ -245,10 +238,16 @@ SqlGrammar<Iterator, Skipper>::SqlGrammar( const Tokens &t)
             ;
     DISSEQT_DEBUG_NODE( literal_value);
 
-    // in the syntax spec for SQLite, conflict_clause has an empty alternative, this has been
-    // removed and the conflict clause itself has become optional in all rules that use it.
     conflict_clause =
-            t.ON > t.CONFLICT > (t.ROLLBACK|t.ABORT|t.FAIL|t.IGNORE|t.REPLACE)
+                    omit[t.ON > t.CONFLICT] >
+                    (
+                            omit[t.ROLLBACK] >> attr(Rollback)
+                        |   omit[t.ABORT   ] >> attr(Abort)
+                        |   omit[t.FAIL    ] >> attr(Fail)
+                        |   omit[t.IGNORE  ] >> attr(Ignore)
+                        |   omit[t.REPLACE ] >> attr(Replace)
+                    )
+                |   eps >> attr( NoAlternate)
             ;
     DISSEQT_DEBUG_NODE( conflict_clause);
 
@@ -432,11 +431,22 @@ SqlGrammar<Iterator, Skipper>::SqlGrammar( const Tokens &t)
     DISSEQT_DEBUG_NODE( ordering_term);
 
     update_stmt =
-            -with_clause >> t.UPDATE > -weasel_clause > qualified_table_name
-            >   t.SET >> (column_name >> '=' >> expr)%',' >> -(t.WHERE > expr)
+                -with_clause
+            >>  (t.UPDATE >> weasel_clause >> qualified_table_name)
+            >>  (t.SET > column_assignments)
+            >>  -(t.WHERE > expr)
             >>  -update_limited_clause
             ;
     DISSEQT_DEBUG_NODE( update_stmt);
+
+    column_assignments =
+                column_assignment%','
+            ;
+
+    column_assignment =
+                column_name >> '=' >> expr
+            ;
+
 
     qualified_table_name =
             composite_table_name >> -index_clause
@@ -451,13 +461,13 @@ SqlGrammar<Iterator, Skipper>::SqlGrammar( const Tokens &t)
     weasel_clause =
                 omit[t.OR] >
                     (
-                        omit[t.ROLLBACK]  >> attr( InsertRollback)
-                    |   omit[t.ABORT]     >> attr( InsertAbort)
+                        omit[t.ROLLBACK]  >> attr( Rollback)
+                    |   omit[t.ABORT]     >> attr( Abort)
                     |   omit[t.REPLACE]   >> attr( Replace)
-                    |   omit[t.FAIL]      >> attr( InsertFail)
-                    |   omit[t.IGNORE]    >> attr( InsertIgnore)
+                    |   omit[t.FAIL]      >> attr( Fail)
+                    |   omit[t.IGNORE]    >> attr( Ignore)
                     ) [_val = _1]
-            |   eps >> attr( Insert)
+            |   eps >> attr( NoAlternate)
     ;
     DISSEQT_DEBUG_NODE( weasel_clause);
 
