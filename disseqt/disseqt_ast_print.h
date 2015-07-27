@@ -189,7 +189,7 @@ namespace ast {
     DECLARE_NODE_NAME( explain_stmt)
     DECLARE_NODE_NAME( sql_stmt)
     DECLARE_NODE_NAME( sql_stmt_list)
-    DECLARE_NODE_NAME( columns)
+    DECLARE_NODE_NAME( result_columns)
 
     // names
     DECLARE_NODE_NAME( composite_column_name)

@@ -110,11 +110,11 @@ namespace disseqt {
                 >
             result_column;
 
-        typedef std::vector<result_column> columns;
+        typedef std::vector<result_column> result_columns;
 
         BOOST_FUSION_DEFINE_STRUCT_INLINE(
                 select_phrase,
-                (columns,         columns)
+                (result_columns,                     columns)
                 (boost::optional< join_clause>,      from)
                 (boost::optional< expression>,       where)
                 (boost::optional< std::vector<expression>>,  group_by)
