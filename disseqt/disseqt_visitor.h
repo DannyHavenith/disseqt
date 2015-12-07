@@ -6,9 +6,11 @@
 #define DISSEQT_VISITOR_H_
 #include <boost/variant.hpp>
 #include <boost/fusion/include/for_each.hpp>
+#include <boost/fusion/include/is_sequence.hpp>
 #include <boost/range/iterator_range.hpp>
 #include <boost/spirit/include/support.hpp>
 
+#include <type_traits> // for std::enable_if
 
 #define DISSEQT_VISITOR_IMPL_TERMINAL( terminal_)   \
         void operator()( const terminal_ &node)     \
@@ -24,21 +26,22 @@ namespace disseqt {
      *
      * This implementation does nothing more than visit each node in the AST.
      *
-     * Derived classes can implement overrides of operator()() for specific types
-     * and leave the other types to this class.
+     * Visitation is split into two parts: operator()() and Visit().
+     * operator()() is expected to call Visit() on an object and then recurse into the sub-objects
+     * Visit() is expected to only visit an object (do whatever the object wants to do).
+     *
+     *
      */
     template< typename DerivedType>
     class AstVisitor : public boost::static_visitor<>
     {
-        DerivedType &Derived()
-        {
-            return static_cast<const DerivedType &>( *this);
-        }
+    public:
 
-        /// default implementation assumes that a node is a boost::fusion sequence and
-        /// will visit each element of the sequence.
+        /// By default, for fusion sequences, the behaviour is to visit the object first
+        /// and then to descent into its constituents (top down visitation).
         template< typename NodeType>
-        void operator()( NodeType &node)
+        typename std::enable_if<boost::fusion::traits::is_sequence<NodeType>::value>::type
+        operator()( const NodeType &node)
         {
             if (Derived().Visit(node))
             {
@@ -46,12 +49,24 @@ namespace disseqt {
             }
         }
 
+        /// By default, for anything that is not a fusion sequence, we only visit
+        /// the type and leave it at that. This is done to easily cover all terminals
+        /// of the AST.
+        template< typename NodeType>
+        typename std::enable_if<not boost::fusion::traits::is_sequence<NodeType>::value>::type
+        operator()( const NodeType &node)
+        {
+            Derived().Visit( node);
+        }
+
+        /// Recursive wrappers get silently unwrapped and the wrapped type is visited.
         template< typename NodeType>
         void operator()(const boost::recursive_wrapper<NodeType> &node)
         {
             Derived()(node.get());
         };
 
+        /// Vectors will be visited and then each element will be visited.
         template< typename Element>
         void operator()( const std::vector< Element> &node)
         {
@@ -61,6 +76,8 @@ namespace disseqt {
             }
         }
 
+        /// Variants get visited as a variant first, but then get visited again
+        /// after their actual type is deduced.
         template< typename... VarNodes>
         void operator()( const boost::variant<VarNodes...> &node)
         {
@@ -75,33 +92,28 @@ namespace disseqt {
         {
             if (node)
             {
-                Derived()( node);
+                Derived()( *node);
             }
         }
 
-        // terminals of the syntax tree.
-
-        template< typename TagType>
-        void operator()( const ast::text<TagType> &node)
-        {
-            Derived().Visit( node);
-        }
-
-        DISSEQT_VISITOR_IMPL_TERMINAL( ast::star);
-        DISSEQT_VISITOR_IMPL_TERMINAL( bool);
-        DISSEQT_VISITOR_IMPL_TERMINAL( ast::default_values);
-        DISSEQT_VISITOR_IMPL_TERMINAL( boost::spirit::qi::unused_type);
-        DISSEQT_VISITOR_IMPL_TERMINAL( boost::iterator_range< std::string::const_iterator>);
-        DISSEQT_VISITOR_IMPL_TERMINAL( ast::null);
-        DISSEQT_VISITOR_IMPL_TERMINAL( ast::all);
-        DISSEQT_VISITOR_IMPL_TERMINAL( ast::distinct);
-        DISSEQT_VISITOR_IMPL_TERMINAL( ast::operator_type);
-
+        /// The default implementation of the Visit() function does nothing.
         template< typename Node>
         bool Visit( Node &)
         {
             return true;
         }
+
+    private:
+        DerivedType &Derived()
+        {
+            return static_cast<DerivedType &>( *this);
+        }
+
+        DerivedType &Derived() const
+        {
+            return static_cast<const DerivedType &>( *this);
+        }
+
     };
 }
 

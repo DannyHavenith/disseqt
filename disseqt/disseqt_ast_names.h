@@ -10,6 +10,7 @@
  */
 #ifndef DISSEQT_AST_NAMES_H_
 #define DISSEQT_AST_NAMES_H_
+#include <string>
 #include <boost/range/iterator_range.hpp>
 #include <boost/optional.hpp>
 #include <boost/spirit/include/lex_lexertl.hpp>
@@ -34,7 +35,9 @@ namespace disseqt
         struct text
         {
             typedef TagType tag_type;
+
             text( ) = default;
+
             template<typename OtherTag>
             text( const text<OtherTag> &other): value( other.value){}
 
@@ -52,6 +55,11 @@ namespace disseqt
             {
                 value = ref;
                 return *this;
+            }
+
+            std::string to_string() const
+            {
+                return std::string( value.begin(), value.end());
             }
 
             text_reference value;

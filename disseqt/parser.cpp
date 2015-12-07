@@ -11,9 +11,39 @@
 #include <fstream>
 
 #include "disseqt_ast_print.h"
+#include "disseqt_visitor.h"
+
 namespace disseqt
 {
 namespace qi = boost::spirit::qi;
+
+    class TableNameCollector : public AstVisitor< TableNameCollector>
+    {
+    public:
+
+        /// ignore anything that is not a table name.
+        template< typename T>
+        bool Visit( const T&value)
+        {
+            return true;
+        }
+
+        bool Visit( const ast::composite_table_name &table)
+        {
+            const std::string dbname = table.database?table.database->to_string():"";
+            m_names.push_back( std::make_pair( dbname, table.table.to_string() ));
+            return false;
+        }
+
+        typedef std::vector< std::pair<std::string, std::string>> Names;
+        Names GetNames() const
+        {
+            return m_names;
+        }
+
+    private:
+        Names m_names;
+    };
 
 /**
  * Parse a SQL query and report whether the parse succeeded.
@@ -84,7 +114,19 @@ void test( const std::string &filename)
                 ++succeeded;
                 if (!statements.empty())
                 {
-                    print( std::cout, statements[0]);
+                    // print the table names used in the query
+                    TableNameCollector vis;
+                    vis( statements[0]);
+
+                    std::cout << "table names:\n";
+                    for (const auto &name : vis.GetNames())
+                    {
+                        if (not name.first.empty())
+                        {
+                            std::cout << name.first << '.';
+                        }
+                        std::cout << name.second << '\n';
+                    }
                 }
             }
         }

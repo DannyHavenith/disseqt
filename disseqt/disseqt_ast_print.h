@@ -128,6 +128,7 @@ namespace ast {
           ENUMVAL_TO_STRING( Cross)
           ENUMVAL_TO_STRING( Left)
           ENUMVAL_TO_STRING( Right)
+        default: return output << "Unknown enum value";
         }
     }
     std::ostream &print( std::ostream &output, OrderType value)
@@ -136,6 +137,7 @@ namespace ast {
         {
             ENUMVAL_TO_STRING( Ascending)
             ENUMVAL_TO_STRING( Descending)
+        default: return output << "Unknown enum value";
         }
     }
 
@@ -149,6 +151,7 @@ namespace ast {
             ENUMVAL_TO_STRING( Fail)
             ENUMVAL_TO_STRING( Ignore)
             ENUMVAL_TO_STRING( Replace)
+        default: return output << "Unknown enum value";
        }
     }
 #undef ENUMVAL_TO_STRING
