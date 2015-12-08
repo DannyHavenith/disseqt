@@ -7,8 +7,11 @@
 
 #ifndef DISSEQT_AST_STATEMENTS_H_
 #define DISSEQT_AST_STATEMENTS_H_
+#include "disseqt_ast_expressions.h"
 #include <boost/fusion/adapted/struct/define_struct_inline.hpp>
 #include <boost/variant.hpp>
+#include <boost/optional.hpp>
+#include <vector>
 
 namespace disseqt {
     namespace ast {

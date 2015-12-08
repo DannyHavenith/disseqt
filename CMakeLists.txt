@@ -3,5 +3,9 @@ cmake_minimum_required( VERSION 2.8)
 project( disseqt)
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -ftemplate-depth=512")
 
+include_directories( ${disseqt_SOURCE_DIR}/disseqt)
+
 add_subdirectory( disseqt)
+add_subdirectory(test)
+
 

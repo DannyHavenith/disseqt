@@ -8,13 +8,14 @@
 #ifndef DISSEQT_AST_EXPRESSIONS_H_
 #define DISSEQT_AST_EXPRESSIONS_H_
 
+#include "disseqt_ast_names.h"
+
 #include <boost/variant/variant.hpp>
 #include <boost/variant/recursive_wrapper.hpp>
 #include <boost/fusion/adapted/struct.hpp>
 #include <boost/optional.hpp>
 #include <vector>
 
-#include "disseqt_ast_names.h"
 
 namespace disseqt {
     namespace ast {
