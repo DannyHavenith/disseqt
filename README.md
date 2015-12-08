@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/DannyHavenith/disseqt.svg)](https://travis-ci.org/DannyHavenith/disseqt)
 Disseqt, a SQL(ite) parser
 =====
 
