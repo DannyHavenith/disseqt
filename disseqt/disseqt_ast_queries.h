@@ -26,8 +26,8 @@ namespace disseqt
 
         /// within creates a Query builder that builds visitors that
         /// travel the tree and only start deploying the original visitor
-        template<typename NodeType>
-        using within = QueryBuilder<BuildTopDown<BuildDropper<VisitorBuilder, NodeType>>>;
+        template<typename... NodeTypes>
+        using within = QueryBuilder<BuildTopDown<BuildDropper<VisitorBuilder, NodeTypes...>>>;
     };
 
 
