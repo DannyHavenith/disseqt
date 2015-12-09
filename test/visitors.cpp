@@ -55,7 +55,5 @@ TEST( Visitors, TypeSelect)
     EXPECT_TRUE( names[0].first.empty());
     EXPECT_EQ( "databasex", names[1].first);
     EXPECT_TRUE( names[2].first.empty());
-
-
 }
 

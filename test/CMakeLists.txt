@@ -3,11 +3,12 @@ find_package(Threads REQUIRED)
 
 include_directories(${GTEST_INCLUDE_DIRS})
 
-add_executable( visitors visitors.cpp parsing.cpp)
+add_executable( combined_tests 
+    visitors.cpp parsing.cpp queries.cpp)
 
-target_link_libraries(visitors ${GTEST_BOTH_LIBRARIES} disseqt)
-target_link_libraries(visitors ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(combined_tests ${GTEST_BOTH_LIBRARIES} disseqt)
+target_link_libraries(combined_tests ${CMAKE_THREAD_LIBS_INIT})
 
 
 enable_testing()
-add_test( visitors visitors)
+add_test( combined_tests combined_tests)

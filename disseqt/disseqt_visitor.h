@@ -118,10 +118,30 @@ namespace disseqt {
         ActualVisitor m_actual;
     };
 
+    struct BuildIdentity
+    {
+        template< typename Visitor>
+        using Composite = Visitor;
+
+        template< typename Visitor>
+        static Visitor create( Visitor v)
+        {
+            return v;
+        }
+
+    };
+
+    template< typename NextBuilder>
     struct BuildTopDown
     {
         template< typename Visitor>
-        using Apply = TopDownVisitor< Visitor>;
+        using Composite = TopDownVisitor< typename NextBuilder::template Composite<Visitor>>;
+
+        template< typename Visitor>
+        static Composite<Visitor> create( Visitor v)
+        {
+            return Composite<Visitor>( NextBuilder::create( v));
+        }
     };
 
     template<typename Visitor, typename NodeType>
@@ -171,7 +191,10 @@ namespace disseqt {
         }
 
         template< typename T>
-        bool operator()( const T&)
+        typename std::enable_if<
+             not boost::mpl::contains< TypesSet, T>::value,
+             bool
+         >::type operator()( const T&)
         {
             return true;
         }
@@ -180,11 +203,18 @@ namespace disseqt {
         Payload m_payload;
     };
 
-    template< typename... ApplicableTypes>
+    template< typename NextBuilder, typename... ApplicableTypes>
     struct BuildDropper
     {
         template< typename Visitor>
-        using Apply = VisitorDropper< Visitor, ApplicableTypes...>;
+        using Composite = VisitorDropper< typename NextBuilder:: template Composite<Visitor>, ApplicableTypes...>;
+
+        template< typename Visitor>
+        static Composite<Visitor> create( Visitor v)
+        {
+            return Composite<Visitor>( NextBuilder::create( v));
+        }
+
     };
 }
 
