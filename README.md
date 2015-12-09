@@ -27,6 +27,8 @@ The parser generates a strongly typed Abstract Syntax Tree that can be traversed
     EXPECT_EQ( (StringVector{"nested1", "nested2"}), collectNames.GetNames());
 ```
 
+(see [the unit test sources](test/queries.cpp))
+
 
 
 
