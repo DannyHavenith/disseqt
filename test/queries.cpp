@@ -4,7 +4,7 @@
  *  Created on: Dec 8, 2015
  *      Author: danny
  */
-#include <disseqt_visitor_builders.h>
+#include "disseqt_visitor_builders.h"
 #include "parser.h"
 #include <gtest/gtest.h>
 
@@ -162,6 +162,62 @@ TEST(AstQueries, InitializedVisitor)
         .in( ast);
 
     EXPECT_EQ( (StringVector{"initial","nested1", "nested2", "nested3"}), columnNames.GetNames());
+
+}
+
+TEST( AstQueries, CombinedVisitors)
+{
+    const std::string insertAndSelect = R"(
+        INSERT INTO destination(d1,d2)
+        SELECT field1, field2
+        FROM source1, (SELECT nested1, nested2 + nested3 FROM nested_source1, nested_source2 WHERE nested3 = 1) 
+        WHERE source1.field3 = source2.field4
+        )";
+
+    ast::sql_stmt_list ast;
+    ASSERT_NO_THROW( ast = disseqt::parse( insertAndSelect));
+
+    // visitor that finds table names in the from-part of selects inside
+    // insert values or with-clauses.
+    auto sourceTablesCollector =
+            apply<NamesCollector>()
+            .in_every<table_name>()
+            .within<>(&select_phrase::from)
+            .within<insert_values, with_clause>();
+
+    // visitor that finds table names in the 'into'-part of an
+    // insert statement
+    auto destinationTablesCollector =
+            apply<NamesCollector>()
+            .in_every<table_name>()
+            .within( &insert_stmt::table);
+
+    StringVector sourceNames;
+    StringVector destinationNames;
+
+    // create a complex visitor that will search for insert statements and if
+    // it finds one, will release the two previously declared visitors into that
+    // statement.
+    auto columnNames =
+            apply([&sourceTablesCollector,
+                   &destinationTablesCollector,
+                   &sourceNames,
+                   &destinationNames]
+                   ( const insert_stmt &insert)
+                   {
+                        sourceNames
+                            = sourceTablesCollector.in( insert).GetNames();
+                        destinationNames
+                            = destinationTablesCollector.in(insert).GetNames();
+
+                        return false;
+                   })
+            .in_every<insert_stmt>()
+            .in( ast);
+
+    EXPECT_EQ( (StringVector{"destination"}), destinationNames);
+    EXPECT_EQ( (StringVector{"source1", "nested_source1", "nested_source2"}), sourceNames);
+
 
 }
 
