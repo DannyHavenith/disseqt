@@ -118,41 +118,6 @@ namespace disseqt {
         ActualVisitor m_actual;
     };
 
-    struct BuildIdentity
-    {
-        template< typename Visitor>
-        using Composite = Visitor;
-
-        template< typename Visitor>
-        static Visitor create( Visitor v)
-        {
-            return v;
-        }
-
-    };
-
-    template< typename NextBuilder>
-    struct BuildTopDown
-    {
-        template< typename Visitor>
-        using Composite = TopDownVisitor< typename NextBuilder::template Composite<Visitor>>;
-
-        template< typename Visitor>
-        static Composite<Visitor> create( Visitor v)
-        {
-            return Composite<Visitor>( NextBuilder::create( v));
-        }
-    };
-
-    template<typename Visitor, typename NodeType>
-    Visitor &VisitTopDown( Visitor &v, NodeType &node)
-    {
-        TopDownVisitor<Visitor &> td( v);
-        td( node);
-        return v;
-    }
-
-
     /**
      * Visitor that applies an embedded visitor for specific types.
      *
@@ -203,19 +168,34 @@ namespace disseqt {
         Payload m_payload;
     };
 
-    template< typename NextBuilder, typename... ApplicableTypes>
-    struct BuildDropper
-    {
-        template< typename Visitor>
-        using Composite = VisitorDropper< typename NextBuilder:: template Composite<Visitor>, ApplicableTypes...>;
+    template< typename Visitor, typename Struct, typename MemberType>
+    class AtMemberDropper {
+    public:
+        AtMemberDropper( const Visitor &v, MemberType Struct::*member)
+        :m_visitor( v),m_member( member)
+        {}
 
-        template< typename Visitor>
-        static Composite<Visitor> create( Visitor v)
+        template< typename T>
+        bool operator()( T &node)
         {
-            return Composite<Visitor>( NextBuilder::create( v));
+            return true;
         }
 
+        bool operator()( Struct &s)
+        {
+            return m_visitor( s.*m_member);
+        }
+
+        bool operator()( const Struct &s)
+        {
+            return m_visitor( s.*m_member);
+        }
+
+    private:
+        Visitor             m_visitor;
+        MemberType Struct::*m_member;
     };
+
 }
 
 #endif /* DISSEQT_VISITOR_H_ */
