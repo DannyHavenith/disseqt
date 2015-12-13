@@ -4,7 +4,7 @@
  *  Created on: Dec 8, 2015
  *      Author: danny
  */
-#include "disseqt_ast_queries.h"
+#include <disseqt_visitor_builders.h>
 #include "parser.h"
 #include <gtest/gtest.h>
 

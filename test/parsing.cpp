@@ -5,8 +5,8 @@
  * is tested with the use of visitors in visitors.cpp
  */
 
+#include <disseqt_visitors.h>
 #include "parser.h"
-#include "disseqt_visitor.h"
 #include <gtest/gtest.h>
 
 

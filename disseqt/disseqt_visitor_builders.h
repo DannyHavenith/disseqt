@@ -5,10 +5,10 @@
  *      Author: danny
  */
 
-#ifndef DISSEQT_DISSEQT_AST_QUERIES_H_
-#define DISSEQT_DISSEQT_AST_QUERIES_H_
+#ifndef DISSEQT_DISSEQT_VISITOR_BUILDERS_H_
+#define DISSEQT_DISSEQT_VISITOR_BUILDERS_H_
 
-#include "disseqt_visitor.h"
+#include <disseqt_visitors.h>
 #include <utility> // for std::forward
 
 namespace disseqt
@@ -217,4 +217,4 @@ namespace disseqt
 
 
 
-#endif /* DISSEQT_DISSEQT_AST_QUERIES_H_ */
+#endif /* DISSEQT_DISSEQT_VISITOR_BUILDERS_H_ */

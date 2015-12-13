@@ -5,6 +5,7 @@
  *      Author: danny
  */
 
+#include <disseqt_visitors.h>
 #include "parser.h"
 #include "lexer.h"
 #include "disseqt_grammar.h"
@@ -15,7 +16,6 @@
 #include <sstream>
 
 #include "disseqt_ast_print.h"
-#include "disseqt_visitor.h"
 
 
 namespace disseqt
