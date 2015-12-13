@@ -122,7 +122,7 @@ TEST(AstQueries, MemberSelection)
     const std::string insertAndSelect = R"(
         INSERT INTO destination(d1,d2) 
         SELECT field1, field2 
-        FROM source1, (SELECT nested1, nested2 + nested3 FROM nested_source WHERE nested3 = 1) 
+        FROM source1, (SELECT nested1, nested2 + nested3 FROM nested_source WHERE nested4 = 1) 
         WHERE source1.field3 = source2.field4
         )";
 
