@@ -58,13 +58,13 @@ namespace ast {
 
     std::ostream &print( std::ostream &output, bool val)
     {
-        output << std::boolalpha << val;
+        return output << std::boolalpha << val;
     }
 
     template< typename NodeType>
     std::ostream &print( std::ostream &output, const boost::recursive_wrapper<NodeType> &node)
     {
-        print( output, node.get());
+        return print( output, node.get());
     }
 
     template< typename ElementType>

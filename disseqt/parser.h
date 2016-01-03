@@ -30,6 +30,7 @@ namespace disseqt
     ast::sql_stmt_list parse( std::string::const_iterator &first, std::string::const_iterator last);
     ast::sql_stmt_list parse( const std::string &sql);
     ast::sql_stmt_list parse( std::istream &inputstream);
+    bool is_valid( const std::string &sql);
 
 }
 

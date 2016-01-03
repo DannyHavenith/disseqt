@@ -19,6 +19,7 @@ public:
     bool operator()( const NameType &name)
     {
         m_names.push_back( name.to_string());
+        return true;
     }
 
     StringVector GetNames() const
@@ -198,22 +199,21 @@ TEST( AstQueries, CombinedVisitors)
     // create a complex visitor that will search for insert statements and if
     // it finds one, will release the two previously declared visitors into that
     // statement.
-    auto columnNames =
-            apply([&sourceTablesCollector,
-                   &destinationTablesCollector,
-                   &sourceNames,
-                   &destinationNames]
-                   ( const insert_stmt &insert)
-                   {
-                        sourceNames
-                            = sourceTablesCollector.in( insert).GetNames();
-                        destinationNames
-                            = destinationTablesCollector.in(insert).GetNames();
+    apply([&sourceTablesCollector,
+           &destinationTablesCollector,
+           &sourceNames,
+           &destinationNames]
+           ( const insert_stmt &insert)
+           {
+                sourceNames
+                    = sourceTablesCollector.in( insert).GetNames();
+                destinationNames
+                    = destinationTablesCollector.in(insert).GetNames();
 
-                        return false;
-                   })
-            .in_every<insert_stmt>()
-            .in( ast);
+                return false;
+           })
+    .in_every<insert_stmt>()
+    .in( ast);
 
     EXPECT_EQ( (StringVector{"destination"}), destinationNames);
     EXPECT_EQ( (StringVector{"source1", "nested_source1", "nested_source2"}), sourceNames);

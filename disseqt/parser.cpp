@@ -94,6 +94,21 @@ ast::sql_stmt_list parse( const std::string &sql)
     return result;
 }
 
+bool is_valid( const std::string &sql)
+{
+    bool result = true;
+    try
+    {
+        parse( sql);
+    }
+    catch( const parser_error &)
+    {
+        result = false;
+    }
+
+    return result;
+}
+
 /**
  * Parse sql statements from an input stream.
  *

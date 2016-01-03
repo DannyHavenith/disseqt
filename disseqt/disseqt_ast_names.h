@@ -13,8 +13,8 @@
 #include <string>
 #include <boost/range/iterator_range.hpp>
 #include <boost/optional.hpp>
-#include <boost/spirit/include/lex_lexertl.hpp>
 #include <boost/spirit/include/support.hpp>
+#include <boost/spirit/include/support_unused.hpp>
 #include <boost/fusion/adapted/struct.hpp>
 
 namespace disseqt
@@ -63,7 +63,7 @@ namespace disseqt
             }
 
             text_reference value;
-            boost::spirit::qi::unused_type dummy;
+            boost::spirit::unused_type dummy;
         };
 
         typedef text<generic_name_tag> generic_name;
@@ -115,7 +115,7 @@ BOOST_FUSION_ADAPT_TPL_STRUCT(
         (TagType),
         (disseqt::ast::text)(TagType),
         (disseqt::ast::text_reference, value)
-        (boost::spirit::qi::unused_type, dummy)
+        (boost::spirit::unused_type, dummy)
         )
 
 BOOST_FUSION_ADAPT_STRUCT(

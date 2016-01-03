@@ -239,15 +239,15 @@ SqlGrammar<Iterator, Skipper>::SqlGrammar( const Tokens &t)
     DISSEQT_DEBUG_NODE( literal_value);
 
     conflict_clause =
-                    omit[t.ON > t.CONFLICT] >
+                    (omit[t.ON > t.CONFLICT] >
                     (
                             omit[t.ROLLBACK] >> attr(Rollback)
                         |   omit[t.ABORT   ] >> attr(Abort)
                         |   omit[t.FAIL    ] >> attr(Fail)
                         |   omit[t.IGNORE  ] >> attr(Ignore)
                         |   omit[t.REPLACE ] >> attr(Replace)
-                    )
-                |   eps >> attr( NoAlternate)
+                    ))
+                |   (eps >> attr( NoAlternate))
             ;
     DISSEQT_DEBUG_NODE( conflict_clause);
 
@@ -459,15 +459,15 @@ SqlGrammar<Iterator, Skipper>::SqlGrammar( const Tokens &t)
     DISSEQT_DEBUG_NODE( update_limited_clause);
 
     weasel_clause =
-                omit[t.OR] >
+                (omit[t.OR] >
                     (
                         omit[t.ROLLBACK]  >> attr( Rollback)
                     |   omit[t.ABORT]     >> attr( Abort)
                     |   omit[t.REPLACE]   >> attr( Replace)
                     |   omit[t.FAIL]      >> attr( Fail)
                     |   omit[t.IGNORE]    >> attr( Ignore)
-                    ) [_val = _1]
-            |   eps >> attr( NoAlternate)
+                    ) [_val = _1])
+            |   (eps >> attr( NoAlternate))
     ;
     DISSEQT_DEBUG_NODE( weasel_clause);
 

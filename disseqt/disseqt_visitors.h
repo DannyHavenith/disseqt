@@ -78,7 +78,7 @@ namespace disseqt {
         {
             (*this)(node.get());
             return false;
-        };
+        }
 
         /// Vectors will be visited and then each element will be visited.
         template< typename Element>
