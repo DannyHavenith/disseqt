@@ -167,7 +167,7 @@ namespace disseqt
         class VisitorReference {
         public:
             VisitorReference( Visitor &v)
-            :m_visitor{ v}
+            :m_visitor(v)
             {}
 
             template<typename T>
@@ -181,7 +181,7 @@ namespace disseqt
         };
 
         explicit VisitorStorage( Visitor visitor)
-        :m_visitor{visitor}
+        :m_visitor(visitor)
         {
         }
 
@@ -209,7 +209,7 @@ namespace disseqt
     template< typename Visitor>
     VisitorBuilder<VisitorStorage<Visitor>, typename VisitorStorage<Visitor>::VisitorReference> apply( const Visitor &v = Visitor{})
     {
-        return {VisitorStorage<Visitor>{v}};
+        return {VisitorStorage<Visitor>(v)};
     }
 
 }
