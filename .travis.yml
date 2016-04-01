@@ -5,6 +5,14 @@ compiler:
    - gcc
 
 before_install:
+  # install boost 1.60 (headers only)
+  - wget http://sourceforge.net/projects/boost/files/boost/1.60.0/boost_1_60_0.tar.bz2/download -O /tmp/boost.tar.bz2
+  - mkdir -p temp
+  - cd temp
+  - tar jxf /tmp/boost.tar.bz2 boost_1_60_0/boost # extract headers only
+  - sudo mkdir -p /usr/local/include/
+  - sudo ln -s $PWD/boost_1_60_0/boost /usr/local/include
+  - cd ..
   #install g++-4.8
   - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
   - sudo apt-get update
