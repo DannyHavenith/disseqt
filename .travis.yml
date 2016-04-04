@@ -13,7 +13,7 @@ before_install:
   - sudo mkdir -p /usr/local/include/
   - sudo ln -s $PWD/boost_1_60_0/boost /usr/local/include
   - cd ..
-  #install g++-4.8
+  #install g++-4.9
   - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
   - sudo apt-get update
   - if [ "$CXX" = "g++" ]; then sudo apt-get install g++-4.9; fi
@@ -33,4 +33,4 @@ script:
     - cmake ..
     - make
     - cd test
-    - ./combined_tests
+    - ctest
