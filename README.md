@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/DannyHavenith/disseqt.svg)](https://travis-ci.org/DannyHavenith/disseqt) (well at least at travis' ancient g++ 4.6 compiler it is)
+[![Build Status](https://travis-ci.org/DannyHavenith/disseqt.svg)](https://travis-ci.org/DannyHavenith/disseqt) (use g++ >= 4.9)
 Disseqt, a SQL(ite) parser
 =====
 
