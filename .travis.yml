@@ -33,4 +33,4 @@ script:
     - cmake ..
     - make
     - cd test
-    - ctest
+    - ./combined_tests
