@@ -10,5 +10,6 @@ target_link_libraries(combined_tests ${GTEST_BOTH_LIBRARIES} disseqt)
 target_link_libraries(combined_tests ${CMAKE_THREAD_LIBS_INIT})
 
 
-enable_testing()
-add_test( combined_tests combined_tests)
+add_test( 
+    NAME combined_tests 
+    COMMAND combined_tests)
