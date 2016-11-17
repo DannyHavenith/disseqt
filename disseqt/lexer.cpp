@@ -62,6 +62,7 @@ namespace disseqt
              (UNKNOWN);
      }
 
+    // make sure a lexer for std::string::const_iterator is instantiated in this translation unit.
     typedef LexerTypes<std::string::const_iterator> InstantiatedLexerTypes;
     template class Lexer<InstantiatedLexerTypes::base_lexer_type>;
 }

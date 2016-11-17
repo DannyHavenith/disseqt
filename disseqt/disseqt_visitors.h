@@ -168,6 +168,14 @@ namespace disseqt {
         Payload m_payload;
     };
 
+    /**
+     * A Visitor that applies an embedded visitor at specific members of
+     * specified types.
+     *
+     * Objects of this class can be applied to any type and do nothing, but
+     * if objects of type 'Struct' are offered, an embedded visitor will
+     * be applied to a single member or that struct.
+     */
     template< typename Visitor, typename Struct, typename MemberType>
     class AtMemberDropper {
     public:

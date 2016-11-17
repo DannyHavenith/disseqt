@@ -166,6 +166,7 @@ TEST(AstQueries, InitializedVisitor)
 
 }
 
+
 TEST( AstQueries, CombinedVisitors)
 {
     const std::string insertAndSelect = R"(
@@ -221,4 +222,24 @@ TEST( AstQueries, CombinedVisitors)
 
 }
 
+TEST( AstQueries, BindingParameters)
+{
+    const std::string nestedWithParameters = R"(
+        SELECT field1, :par1, ?42, $par3::no::idea::why( I would want this)
+        FROM table1 JOIN table2 ON table2.field2 == :par4, (SELECT :par5 FROM table2)
+        WHERE :par6 == :par7 AND par8 <> a_parameter AND :par9 AND :par10
+)";
 
+    ast::sql_stmt_list ast;
+    ASSERT_NO_THROW( ast = disseqt::parse( nestedWithParameters));
+
+    auto parameterNames =
+        apply<NamesCollector>()
+        .in_every<parameter_name>()
+        .in( ast);
+
+    EXPECT_EQ(
+            (StringVector{ ":par1", "?42", "$par3::no::idea::why( I would want this)", ":par4", ":par5", ":par6", ":par7", ":par9", ":par10"}),
+            parameterNames.GetNames());
+
+}

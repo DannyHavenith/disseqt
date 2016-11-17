@@ -131,8 +131,6 @@ namespace disseqt {
 
 
         struct default_values {};
-
-
         struct select_statement;
 
         BOOST_FUSION_DEFINE_STRUCT_INLINE(
@@ -282,7 +280,5 @@ BOOST_FUSION_ADAPT_STRUCT(
         (boost::optional<disseqt::ast::column_list>,    columns)
         (disseqt::ast::insert_values,                   values)
     )
-
-
 
 #endif /* DISSEQT_AST_STATEMENTS_H_ */

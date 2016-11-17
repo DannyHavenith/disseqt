@@ -15,16 +15,20 @@
 #include <iostream>
 #include <iomanip>
 
+
 using namespace boost::spirit;
 using namespace boost::spirit::ascii;
 
 //#define DISSEQT_DEBUG
 
 #if defined( DISSEQT_DEBUG)
-#    define DISSEQT_DEBUG_NODE( node_) node_.name( #node_); qi::debug( node_)
+#   include <boost/fusion/sequence/io.hpp>
+#   include <boost/fusion/include/io.hpp>
+#   define DISSEQT_DEBUG_NODE( node_) node_.name( #node_); qi::debug( node_)
 #else
-#    define DISSEQT_DEBUG_NODE( node_) node_.name( #node_)
+#   define DISSEQT_DEBUG_NODE( node_) node_.name( #node_)
 #endif
+
 #define DISSEQT_PARSER_KEYWORD_ALTERNATIVE( r, type, keyword) |  t.keyword
 
 // some printf-style debug functions.
@@ -479,12 +483,12 @@ SqlGrammar<Iterator, Skipper>::SqlGrammar( const Tokens &t)
 
     or_operand =
                 and_operand                 [_val = _1]
-            >>  *( t.AND >> and_operand)    [ph::bind( binexp, And, _val, _1)]
+            >>  *( t.AND >> and_operand)    [_val = ph::bind( binexp, And, _val, _1)]
             ;
     DISSEQT_DEBUG_NODE( or_operand);
 
     and_operand =
-                compare_operand                             [_val = _1]
+                compare_operand [_val = _1]
             >>  *(
                         (comparison_operator >> compare_operand) [_val = ph::bind( binexp, _1, _val, _2)]
                     |   (opt_not >> t.IN >>  set_expression)     [_val = ph::bind( inexp, _val, _2, _1)]
@@ -517,7 +521,8 @@ SqlGrammar<Iterator, Skipper>::SqlGrammar( const Tokens &t)
     DISSEQT_DEBUG_NODE( comparison_operator);
 
     compare_operand =
-            ineq_operand >> *( ineq_operator >> ineq_operand)
+                ineq_operand [_val = _1]
+            >>  *( ineq_operator >> ineq_operand)[ _val = ph::bind( binexp, _1, _val, _2)]
             ;
     DISSEQT_DEBUG_NODE( compare_operand);
 
@@ -531,7 +536,8 @@ SqlGrammar<Iterator, Skipper>::SqlGrammar( const Tokens &t)
     DISSEQT_DEBUG_NODE( ineq_operator);
 
     ineq_operand =
-            bitwise_operand >> *(bitwise_operator >> bitwise_operand)
+                bitwise_operand [_val = _1]
+            >>  *(bitwise_operator >> bitwise_operand)[ _val = ph::bind( binexp, _1, _val, _2)]
             ;
     DISSEQT_DEBUG_NODE( ineq_operand);
 
@@ -660,7 +666,7 @@ SqlGrammar<Iterator, Skipper>::SqlGrammar( const Tokens &t)
     DISSEQT_DEBUG_NODE( composite_column_name);
 
     bind_parameter =
-            t.BIND_PARAMETER
+            t.BIND_PARAMETER [ph::at_c<0>(_val) = _1]
             ;
     DISSEQT_DEBUG_NODE( bind_parameter);
 
@@ -725,6 +731,8 @@ struct GrammarInstantiator
 
 }
 
+// make sure a grammar for std::string::const_iterator is instantiated in this
+// translation unit.
 typedef disseqt::LexerTypes< std::string::const_iterator> InstantiatedLexerTypes;
 typedef typename InstantiatedLexerTypes::iterator_type lexer_iterator;
 typedef disseqt::Lexer<typename InstantiatedLexerTypes::base_lexer_type> LexerType;

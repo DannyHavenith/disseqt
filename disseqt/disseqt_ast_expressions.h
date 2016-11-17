@@ -87,6 +87,7 @@ namespace disseqt {
                 numeric_literal,
                 blob_literal,
                 composite_column_name,
+                parameter_name,
                 exists,
                 boost::recursive_wrapper<ternary_op>,
                 boost::recursive_wrapper<binary_op>,
@@ -261,4 +262,11 @@ BOOST_FUSION_ADAPT_STRUCT(
         (disseqt::ast::expression,        e)
         (disseqt::ast::set_expression,    set)
     )
+
+BOOST_FUSION_ADAPT_STRUCT(
+        disseqt::ast::collate,
+        (disseqt::ast::expression,      e)
+        (disseqt::ast::collation_name,  name)
+        )
+
 #endif /* DISSEQT_AST_EXPRESSIONS_H_ */

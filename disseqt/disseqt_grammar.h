@@ -46,8 +46,8 @@ namespace disseqt
         rule table_constraint;
         rule indexed_column;
         rule compound_operator;
-        rule bind_parameter;
 
+        typename Rule<ast::parameter_name   >::t bind_parameter;
         typename Rule<ast::sql_stmt_list    >::t sql_stmt_list;
         typename Rule<ast::sql_stmt         >::t sql_stmt;
         typename Rule<ast::statement        >::t statement;

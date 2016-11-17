@@ -96,6 +96,9 @@ namespace disseqt
         struct column_name_tag {};
         typedef text<column_name_tag> column_name;
 
+        struct parameter_name_tag {};
+        typedef text<parameter_name_tag> parameter_name;
+
         struct composite_table_name
         {
             optional< database_name> database;
