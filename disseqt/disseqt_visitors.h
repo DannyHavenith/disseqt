@@ -21,7 +21,7 @@ namespace disseqt {
      * Generic top-down visitor.
      *
      * This partial visitor implementation implements an iteration strategy on the
-     * AST; specifically a top-down, depth first strategy.
+     * AST; specifically depth first pre-order strategy.
      *
      * This visitor takes an embedded visitor object that will be applied to each node
      * in the AST. The embedded visitor can prohibit further recursion down the tree
@@ -103,10 +103,13 @@ namespace disseqt {
             return false;
         }
 
+        /// Optionals get the same treatment as variants: first the optional
+        /// itself is visited and if the optional has a value, then that
+        /// value will be visited.
         template< typename NodeType>
         bool operator()( const boost::optional< NodeType> &node)
         {
-            if (node)
+            if (m_actual( node) and node)
             {
                 (*this)( *node);
             }
