@@ -1,6 +1,6 @@
-[![Build Status](https://travis-ci.org/DannyHavenith/disseqt.svg)](https://travis-ci.org/DannyHavenith/disseqt) (use g++ >= 4.9)
 Disseqt, a SQL(ite) parser
 =====
+[![Build Status](https://travis-ci.org/DannyHavenith/disseqt.svg)](https://travis-ci.org/DannyHavenith/disseqt) (use g++ >= 4.9)
 
 This is an SQL parser written using [boost.spirit](http://www.boost.org/doc/libs/release/libs/spirit/doc/html/index.html).
 

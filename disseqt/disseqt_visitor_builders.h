@@ -124,27 +124,43 @@ namespace disseqt
             return if_at( member).everywhere();
         }
 
-        Visitor create()
-        {
-            return VisitorConstructor::template construct<Visitor>( m_previous.create());
-        }
-
         InnerVisitor &get_inner()
         {
             return m_previous.get_inner();
         }
 
-        template<typename NodeType>
-        InnerVisitor in( NodeType &node)
+        Visitor create()
         {
+            return VisitorConstructor::template construct<Visitor>( m_previous.create());
+        }
+
+        template<typename NodeType, typename... NodeTypes>
+        InnerVisitor in( NodeType &node, NodeTypes &... nodes)
+        {
+            auto v = create();
             // create a visitor and apply it to the node
-            create()(node);
+            Apply( v, node, nodes...);
 
             // return the inner visitor
             return get_inner();
         }
 
     private:
+
+
+        template<typename V>
+        void Apply( const V &)
+        {
+            // nop
+        }
+
+        template<typename V, typename NodeType, typename... NodeTypes>
+        void Apply( V &v, NodeType &node, NodeTypes &... nodes)
+        {
+            v( node);
+            Apply( v, nodes...);
+        }
+
         PreviousBuilder m_previous;
     };
 

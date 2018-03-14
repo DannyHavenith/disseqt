@@ -3,3 +3,6 @@ add_library( disseqt
     lexer.cpp  
     parser.cpp
     )
+
+target_include_directories( disseqt PRIVATE ${CONAN_INCLUDE_DIRS})
+
