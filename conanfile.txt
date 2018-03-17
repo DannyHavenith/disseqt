@@ -1,0 +1,15 @@
+[requires]
+gtest/1.8.0@conan/stable 
+Boost/1.64.0@conan/stable
+
+[options]
+Boost:shared=True # false
+# Take a look for all available options in conanfile.py
+
+gtest:shared=True
+gtest:no_gmock=False # include Google Mock
+gtest:no_main=True #  link with main() provided by gtest/gmock
+
+[generators]
+txt
+cmake
