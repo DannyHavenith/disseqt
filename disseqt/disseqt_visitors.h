@@ -169,6 +169,43 @@ namespace disseqt {
     };
 
     /**
+    * Visitor that applies an embedded visitor wherever applying
+    * the embedded visitor would not be a compiler error
+    *
+    * This will apply a visitor for each object for which the visitor
+    * has defined an operator()().
+    */
+    template< typename Payload>
+    class ApplyWhereApplicable
+    {
+    public:
+        ApplyWhereApplicable( const Payload &payload)
+        :m_payload{ payload}
+        {
+        }
+
+        template< typename Node>
+        bool operator()( Node &&node)
+        {
+            return ApplyIfCallable( m_payload, std::forward<Node>( node));
+        }
+    private:
+        Payload m_payload;
+
+	template< typename Functor, typename... ArgTypes>
+	static auto ApplyIfCallable( Functor &&f, ArgTypes &&... args)
+		-> decltype( std::forward<Functor>(f)( std::forward<ArgTypes>( args)...))
+	{
+		return std::forward<Functor>(f)( std::forward<ArgTypes>(args)...);
+	}
+
+	static bool ApplyIfCallable( ...)
+	{
+		return true;
+	}
+    };
+
+    /**
      * A Visitor that applies an embedded visitor at specific members of
      * specified types.
      *
