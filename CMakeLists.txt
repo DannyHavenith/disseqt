@@ -15,12 +15,12 @@ include_directories( ${disseqt_SOURCE_DIR}/disseqt)
 add_subdirectory( disseqt)
 add_subdirectory(test)
 
-add_executable( analyze_queries
-    analyze_queries.cpp
-    )
+#add_executable( analyze_queries
+#    analyze_queries.cpp
+#    )
 
-target_link_libraries(     
-    analyze_queries
-    disseqt)
+#target_link_libraries(     
+#    analyze_queries
+#    disseqt)
 
 
