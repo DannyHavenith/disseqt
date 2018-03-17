@@ -5,7 +5,6 @@
  *      Author: danny
  */
 
-#include <disseqt_visitors.h>
 #include "parser.h"
 #include "lexer.h"
 #include "disseqt_grammar.h"
