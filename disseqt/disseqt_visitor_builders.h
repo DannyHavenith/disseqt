@@ -8,8 +8,8 @@
 #ifndef DISSEQT_DISSEQT_VISITOR_BUILDERS_H_
 #define DISSEQT_DISSEQT_VISITOR_BUILDERS_H_
 
-#include <disseqt_visitors.h>
-#include <utility> // for std::forward
+#include "disseqt_visitors.h"
+#include <utility> // for std::forward, std::declval
 
 namespace disseqt
 {
@@ -55,6 +55,65 @@ namespace disseqt
         Arg m_argument;
     };
 
+    /**
+     * VisitorStorage acts as the innermost visitor builder. It does not
+     * create any composite visitors, but simply returns a reference to
+     * an internally stored visitor.
+     */
+    template< typename Visitor>
+    class VisitorStorage {
+    public:
+        typedef Visitor InnerVisitor;
+
+        /**
+         * Simple wrapper around a reference to a visitor.
+         *
+         * This class allows an IdentityBuilder to hold a copy of a visitor
+         * and give all derived visitors a reference to that inner visitor.
+         */
+        class VisitorReference {
+        public:
+            VisitorReference( Visitor &v)
+            :m_visitor(v)
+            {}
+
+            // due to the way R is defined, SFINAE will prevent this operator
+            // to be present if Visitor cannot be applied to an object of type
+            // T.
+            template<typename T, typename R =  decltype( (std::declval<Visitor &>())( std::declval<T>()))>
+            R operator()(T &t)
+            {
+                return m_visitor( t);
+            }
+
+            Visitor &GetVisitor()
+            {
+                return m_visitor;
+            }
+
+        private:
+            Visitor &m_visitor;
+        };
+
+        explicit VisitorStorage( Visitor visitor)
+        :m_visitor(visitor)
+        {
+        }
+
+        Visitor& create()
+        {
+            return m_visitor;
+        }
+
+        Visitor &get_inner()
+        {
+            return m_visitor;
+        }
+
+    private:
+
+        Visitor m_visitor;
+    };
 
     /**
      * VisitorBuilders are those objects that can create nested AST visitors,
@@ -87,7 +146,11 @@ namespace disseqt
          m_previous{previous}
         {}
 
-        VisitorBuilder<ThisType, TopDownVisitor<Visitor>>
+        /**
+         * Apply the inner visitor in every node for which the inner visitor has
+         * a valid operator().
+         */
+        VisitorBuilder<ThisType, TopDownVisitor<ApplyWhereApplicable<Visitor>>>
         everywhere()
         {
             return {*this};
@@ -147,11 +210,16 @@ namespace disseqt
 
     private:
 
-
         template<typename V>
         void Apply( const V &)
         {
             // nop
+        }
+
+        template<typename V, typename NodeType, typename... NodeTypes>
+        void Apply( typename VisitorStorage<V>::VisitorReference &v, NodeType &node, NodeTypes &... nodes)
+        {
+            Apply( v.GetVisitor(), nodes...);
         }
 
         template<typename V, typename NodeType, typename... NodeTypes>
@@ -162,58 +230,6 @@ namespace disseqt
         }
 
         PreviousBuilder m_previous;
-    };
-
-    /**
-     * VisitorStorage acts as the innermost visitor builder. It does not
-     * create any composite visitors, but simply returns a reference to
-     * an internally stored visitor.
-     */
-    template< typename Visitor>
-    class VisitorStorage {
-    public:
-        typedef Visitor InnerVisitor;
-
-        /**
-         * Simple wrapper around a reference to a visitor.
-         *
-         * This class allows an IdentityBuilder to hold a copy of a visitor
-         * and give all derived visitors a reference to that inner visitor.
-         */
-        class VisitorReference {
-        public:
-            VisitorReference( Visitor &v)
-            :m_visitor(v)
-            {}
-
-            template<typename T>
-            bool operator()(T &t)
-            {
-                return m_visitor( t);
-            }
-
-        private:
-            Visitor &m_visitor;
-        };
-
-        explicit VisitorStorage( Visitor visitor)
-        :m_visitor(visitor)
-        {
-        }
-
-        Visitor& create()
-        {
-            return m_visitor;
-        }
-
-        Visitor &get_inner()
-        {
-            return m_visitor;
-        }
-
-    private:
-
-        Visitor m_visitor;
     };
 
     /**

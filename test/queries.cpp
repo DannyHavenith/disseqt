@@ -213,7 +213,7 @@ TEST( AstQueries, CombinedVisitors)
 
                 return false;
            })
-    .in_every<insert_stmt>()
+    .everywhere()
     .in( ast);
 
     EXPECT_EQ( (StringVector{"destination"}), destinationNames);
