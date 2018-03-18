@@ -176,7 +176,7 @@ namespace disseqt {
     * the embedded visitor would not be a compiler error
     *
     * This will apply a visitor for each object for which the visitor
-    * has defined an operator()().
+    * has defined an operator().
     */
     template< typename Payload>
     class ApplyWhereApplicable
@@ -195,17 +195,17 @@ namespace disseqt {
     private:
         Payload m_payload;
 
-	template< typename Functor, typename... ArgTypes>
-	static auto ApplyIfCallable( Functor &&f, ArgTypes &&... args)
-		-> decltype( std::forward<Functor>(f)( std::forward<ArgTypes>( args)...))
-	{
-		return std::forward<Functor>(f)( std::forward<ArgTypes>(args)...);
-	}
+        template< typename Functor, typename... ArgTypes>
+        static auto ApplyIfCallable( Functor &&f, ArgTypes &&... args)
+            -> decltype( std::forward<Functor>(f)( std::forward<ArgTypes>( args)...))
+        {
+            return std::forward<Functor>(f)( std::forward<ArgTypes>(args)...);
+        }
 
-	static bool ApplyIfCallable( ...)
-	{
-		return true;
-	}
+        static bool ApplyIfCallable( ...)
+        {
+            return true;
+        }
     };
 
     /**
