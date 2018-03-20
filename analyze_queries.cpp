@@ -78,7 +78,7 @@ public:
         // Some of the field names might be aliases introduced by embedded select statements.
         auto collected =
                 apply<NamesCollector>()
-                .everywhere()
+                .in_every<column_name, column_alias, select_statement>()
                 .in( phrase);
 
         // add the aliases to our alias list.
@@ -154,6 +154,7 @@ int main( int argc, char *argv[])
     {
         const std::string teststring = GetFileContent( argv[1]);
 
+        std::cout << "query: " << teststring << '\n';
         const auto ast = parse( teststring);
 
         const auto aliasCollector =

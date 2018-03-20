@@ -16,17 +16,17 @@
 namespace disseqt {
     namespace ast {
 
-        BOOST_FUSION_DEFINE_STRUCT_INLINE(
-                expression_alias,
-                (expression, e)
-                (column_alias, alias)
-                )
+        struct expression_alias
+        {
+            expression e;
+            column_alias alias;
+        };
 
 
-        BOOST_FUSION_DEFINE_STRUCT_INLINE(
-                all_of_table,
-                (table_name, table)
-            )
+        struct all_of_table
+        {
+            table_name table;
+        };
 
 
         typedef std::vector<column_name> column_list;
@@ -55,20 +55,22 @@ namespace disseqt {
             Descending
         };
 
-        BOOST_FUSION_DEFINE_STRUCT_INLINE(
-                ordering_term,
-                (expression,                        expr)
-                (boost::optional<collation_name>,   collation)
-                (OrderType,                         order))
+        struct ordering_term
+        {
+            expression                        expr;
+            boost::optional<collation_name>   collation;
+            OrderType                         order;
+        };
+
+        struct join_operator
+        {
+            bool     natural;
+            JoinType type;
+        };
 
         typedef std::vector< ordering_term>
                     order_by_clause;
 
-        BOOST_FUSION_DEFINE_STRUCT_INLINE(
-                join_operator,
-                (bool,     natural)
-                (JoinType, type)
-                )
 
         typedef boost::variant<
                 expression,
@@ -85,26 +87,31 @@ namespace disseqt {
         typedef boost::optional<index_name>
                     index_clause;
 
-        BOOST_FUSION_DEFINE_STRUCT_INLINE(
-                table_or_subquery,
-                (table_or_select_t, table_or_select)
-                (boost::optional<table_alias>, alias)
-                (index_clause, index)
-                )
+        struct table_or_subquery
+        {
+            table_or_select_t table_or_select;
+            boost::optional<table_alias> alias;
+            index_clause index;
+        };
 
 
-        BOOST_FUSION_DEFINE_STRUCT_INLINE(
-                join_expression,
-                (join_operator,                     op)
-                (table_or_subquery,                 right)
-                (boost::optional<join_constraint>,  constraint)
-                )
+        struct join_expression
+        {
+            join_operator                     op;
+            table_or_subquery                 right;
+            boost::optional<join_constraint>  constraint;
+        };
 
-        BOOST_FUSION_DEFINE_STRUCT_INLINE(
-                join_clause,
-                (table_or_subquery,         first)
-                (std::vector<join_expression>,  joined)
-                )
+        struct join_clause
+        {
+            table_or_subquery         first;
+            std::vector<join_expression>  joined;
+        };
+
+        struct values_clause
+        {
+            std::vector< expression> v;
+        };
 
         typedef boost::variant<
                 star,
@@ -115,55 +122,55 @@ namespace disseqt {
 
         typedef std::vector<result_column> result_columns;
 
-        BOOST_FUSION_DEFINE_STRUCT_INLINE(
-                select_phrase,
-                (result_columns,                     columns)
-                (boost::optional< join_clause>,      from)
-                (boost::optional< expression>,       where)
-                (boost::optional< std::vector<expression>>,  group_by)
-                (boost::optional< expression>,       having)
-        )
+        struct select_phrase
+        {
+            result_columns                     columns;
+            boost::optional< join_clause>      from;
+            boost::optional< expression>       where;
+            boost::optional< std::vector<expression>>  group_by;
+            boost::optional< expression>       having;
+        };
 
-        BOOST_FUSION_DEFINE_STRUCT_INLINE(
-                values_clause,
-                (std::vector< expression>, v)
-        )
 
 
         struct default_values {};
         struct select_statement;
 
-        BOOST_FUSION_DEFINE_STRUCT_INLINE(
-                common_table_expression,
-                (table_name, name)
-                (boost::optional<column_list>, columns)
-                (boost::recursive_wrapper<select_statement>, select)
-                )
+        struct common_table_expression
+        {
+            table_name name;
+            boost::optional<column_list> columns;
+            boost::recursive_wrapper<select_statement> select;
+        };
 
 
-        BOOST_FUSION_DEFINE_STRUCT_INLINE(
-                limit_clause,
-                (expression, offset)
-                (expression, limit)
-                )
+        struct limit_clause
+        {
+            expression offset;
+            expression limit;
+        };
 
         typedef boost::variant<values_clause, select_phrase> value_phrase;
-        typedef boost::variant<values_clause, select_statement, default_values> insert_values;
         typedef std::vector<value_phrase> compound_select;
 
-        BOOST_FUSION_DEFINE_STRUCT_INLINE(
-                with_clause,
-                (bool, recursive)
-                (std::vector<common_table_expression>, expressions)
-                )
+        struct with_clause
+        {
+            bool recursive;
+            std::vector<common_table_expression> expressions;
+        };
 
-        BOOST_FUSION_DEFINE_STRUCT_INLINE(
-            select_statement,
-            (boost::optional< with_clause>,       with)
-            (std::vector<value_phrase>,           val)
-            (boost::optional<order_by_clause>,    order_by)
-            (boost::optional<limit_clause>,       limit)
-        )
+
+
+
+        struct select_statement
+        {
+            boost::optional< with_clause>       with;
+            std::vector<value_phrase>           val;
+            boost::optional<order_by_clause>    order_by;
+            boost::optional<limit_clause>       limit;
+        };
+
+        typedef boost::variant<values_clause, select_statement, default_values> insert_values;
 
         // for some reason, the DEFINE_STRUCT_INLINE macro
         // had some misalignment issues, so we're doing the hard-core ADAPT_STRUCT thing
@@ -177,41 +184,41 @@ namespace disseqt {
             insert_values                   values;
         };
 
-        BOOST_FUSION_DEFINE_STRUCT_INLINE(
-                column_def,
-                (column_name,                   column)
-                (boost::optional<type_name>,    type)
-        )
+        struct column_def
+        {
+            column_name                   column;
+            boost::optional<type_name>    type;
+        };
 
-        BOOST_FUSION_DEFINE_STRUCT_INLINE(
-                table_spec,
-                (std::vector<column_def>,   columns)
-                (bool,                      without_identifier)
-                )
+        struct table_spec
+        {
+            std::vector<column_def>   columns;
+            bool                      without_identifier;
+        };
 
         typedef boost::variant<
                 select_statement,
                 table_spec> table_def;
 
-        BOOST_FUSION_DEFINE_STRUCT_INLINE(
-            create_table_stmt,
-            (bool,                  temporary)
-            (bool,                  if_not_exist)
-            (composite_table_name,  table_name)
-            (table_def,             definition)
-        )
+        struct create_table_stmt
+        {
+            bool                  temporary;
+            bool                  if_not_exist;
+            composite_table_name  table_name;
+            table_def             definition;
+        };
 
-        BOOST_FUSION_DEFINE_STRUCT_INLINE(
-                update_limited_clause,
-                (boost::optional<order_by_clause>,  order_by)
-                (limit_clause,                      limit)
-                )
+        struct update_limited_clause
+        {
+            boost::optional<order_by_clause>  order_by;
+            limit_clause                      limit;
+        };
 
-        BOOST_FUSION_DEFINE_STRUCT_INLINE(
-                qualified_table_name,
-                (composite_table_name, name)
-                (boost::optional<index_clause>, index)
-        )
+        struct qualified_table_name
+        {
+            composite_table_name name;
+            boost::optional<index_clause> index;
+        };
 
         struct column_assignment
         {
@@ -239,10 +246,10 @@ namespace disseqt {
                 insert_stmt
                 > statement;
 
-        BOOST_FUSION_DEFINE_STRUCT_INLINE(
-                explain_stmt,
-                (statement, stmt)
-            )
+        struct explain_stmt
+        {
+            statement   stmt;
+        };
 
         typedef boost::variant<
                 statement,
@@ -255,6 +262,10 @@ namespace disseqt {
 
 }
 }
+
+// We're using ADAPT_STRUCT instead of DEFINE_STRUCT_INLINE because the
+// latter introduces a templated constructor which messes up the SFINAE
+// that is used by ApplyWhereApplicable<>.
 
 BOOST_FUSION_ADAPT_STRUCT(
         disseqt::ast::column_assignment,
@@ -281,4 +292,127 @@ BOOST_FUSION_ADAPT_STRUCT(
         (disseqt::ast::insert_values,                   values)
     )
 
+BOOST_FUSION_ADAPT_STRUCT(
+        disseqt::ast::select_phrase,
+        (disseqt::ast::result_columns,                     columns)
+        (boost::optional< disseqt::ast::join_clause>,      from)
+        (boost::optional< disseqt::ast::expression>,       where)
+        (boost::optional< std::vector<disseqt::ast::expression>>,  group_by)
+        (boost::optional< disseqt::ast::expression>,       having)
+    )
+
+BOOST_FUSION_ADAPT_STRUCT(
+        disseqt::ast::qualified_table_name,
+        (disseqt::ast::composite_table_name,          name)
+        (boost::optional<disseqt::ast::index_clause>, index)
+    )
+
+BOOST_FUSION_ADAPT_STRUCT(
+        disseqt::ast::with_clause,
+        (bool, recursive)
+        (std::vector<disseqt::ast::common_table_expression>, expressions)
+        )
+
+BOOST_FUSION_ADAPT_STRUCT(
+    disseqt::ast::select_statement,
+    (boost::optional< disseqt::ast::with_clause>,       with)
+    (std::vector<disseqt::ast::value_phrase>,           val)
+    (boost::optional<disseqt::ast::order_by_clause>,    order_by)
+    (boost::optional<disseqt::ast::limit_clause>,       limit)
+)
+
+BOOST_FUSION_ADAPT_STRUCT(
+        disseqt::ast::column_def,
+        (disseqt::ast::column_name,                   column)
+        (boost::optional<disseqt::ast::type_name>,    type)
+)
+
+BOOST_FUSION_ADAPT_STRUCT(
+        disseqt::ast::table_spec,
+        (std::vector<disseqt::ast::column_def>,   columns)
+        (bool,                      without_identifier)
+        )
+
+BOOST_FUSION_ADAPT_STRUCT(
+    disseqt::ast::create_table_stmt,
+    (bool,                  temporary)
+    (bool,                  if_not_exist)
+    (disseqt::ast::composite_table_name,  table_name)
+    (disseqt::ast::table_def,             definition)
+)
+
+BOOST_FUSION_ADAPT_STRUCT(
+        disseqt::ast::update_limited_clause,
+        (boost::optional<disseqt::ast::order_by_clause>,  order_by)
+        (disseqt::ast::limit_clause,                      limit)
+        )
+
+BOOST_FUSION_ADAPT_STRUCT(
+        disseqt::ast::common_table_expression,
+        (disseqt::ast::table_name, name)
+        (boost::optional<disseqt::ast::column_list>, columns)
+        (boost::recursive_wrapper<disseqt::ast::select_statement>, select)
+        )
+
+
+BOOST_FUSION_ADAPT_STRUCT(
+        disseqt::ast::limit_clause,
+        (disseqt::ast::expression, offset)
+        (disseqt::ast::expression, limit)
+        )
+
+
+BOOST_FUSION_ADAPT_STRUCT(
+        disseqt::ast::table_or_subquery,
+        (disseqt::ast::table_or_select_t, table_or_select)
+        (boost::optional<disseqt::ast::table_alias>, alias)
+        (disseqt::ast::index_clause, index)
+        )
+
+
+BOOST_FUSION_ADAPT_STRUCT(
+        disseqt::ast::join_expression,
+        (disseqt::ast::join_operator,                     op)
+        (disseqt::ast::table_or_subquery,                 right)
+        (boost::optional<disseqt::ast::join_constraint>,  constraint)
+        )
+
+BOOST_FUSION_ADAPT_STRUCT(
+        disseqt::ast::join_clause,
+        (disseqt::ast::table_or_subquery,         first)
+        (std::vector<disseqt::ast::join_expression>,  joined)
+        )
+
+BOOST_FUSION_ADAPT_STRUCT(
+        disseqt::ast::values_clause,
+        (std::vector< disseqt::ast::expression>, v)
+)
+
+BOOST_FUSION_ADAPT_STRUCT(
+        disseqt::ast::ordering_term,
+        (disseqt::ast::expression,                        expr)
+        (boost::optional<disseqt::ast::collation_name>,   collation)
+        (disseqt::ast::OrderType,                         order))
+
+BOOST_FUSION_ADAPT_STRUCT(
+        disseqt::ast::join_operator,
+        (bool,     natural)
+        (disseqt::ast::JoinType, type)
+        )
+
+BOOST_FUSION_ADAPT_STRUCT(
+         disseqt::ast::expression_alias,
+         (disseqt::ast::expression, e)
+         (disseqt::ast::column_alias, alias)
+         )
+
+ BOOST_FUSION_ADAPT_STRUCT(
+         disseqt::ast::all_of_table,
+         (disseqt::ast::table_name, table)
+     )
+
+ BOOST_FUSION_ADAPT_STRUCT(
+         disseqt::ast::explain_stmt,
+         (disseqt::ast::statement, stmt)
+         )
 #endif /* DISSEQT_AST_STATEMENTS_H_ */
