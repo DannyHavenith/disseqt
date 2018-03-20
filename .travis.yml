@@ -5,21 +5,26 @@ compiler:
    - gcc
 
 before_install:
+  # install cmake
+  - sudo apt-get install cmake
+  - sudo pip install conan
+  - sudo pip install conan_package_tools
   # install boost 1.60 (headers only)
-  - wget http://sourceforge.net/projects/boost/files/boost/1.60.0/boost_1_60_0.tar.bz2/download -O /tmp/boost.tar.bz2
-  - mkdir -p temp
-  - cd temp
-  - tar jxf /tmp/boost.tar.bz2 boost_1_60_0/boost # extract headers only
-  - sudo mkdir -p /usr/local/include/
-  - sudo ln -s $PWD/boost_1_60_0/boost /usr/local/include
-  - cd ..
+  #- wget http://sourceforge.net/projects/boost/files/boost/1.60.0/boost_1_60_0.tar.bz2/download -O /tmp/boost.tar.bz2
+  #- mkdir -p temp
+  #- cd temp
+  #- tar jxf /tmp/boost.tar.bz2 boost_1_60_0/boost # extract headers only
+  #- sudo mkdir -p /usr/local/include/
+  #- sudo ln -s $PWD/boost_1_60_0/boost /usr/local/include
+  #- cd ..
   #install g++-4.9
-  - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
-  - sudo apt-get update
-  - if [ "$CXX" = "g++" ]; then sudo apt-get install g++-4.9; fi
-  - if [ "$CXX" = "g++" ]; then export CXX="g++-4.9" CC="gcc-4.9"; fi
+  #- sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
+  #- sudo apt-get update
+  #- if [ "$CXX" = "g++" ]; then sudo apt-get install g++-4.9; fi
+  #- if [ "$CXX" = "g++" ]; then export CXX="g++-4.9" CC="gcc-4.9"; fi
         
 install:
+   - conan remote add conan-community https://api.bintray.com/conan/conan-community/conan
    - sudo apt-get install libgtest-dev
    - cd /usr/src/gtest
    - sudo cmake CMakeLists.txt
@@ -28,6 +33,7 @@ install:
 
 script:
     - cd "${TRAVIS_BUILD_DIR}"
+    - conan install . --build missing
     - mkdir _builds
     - cd _builds
     - cmake ..
