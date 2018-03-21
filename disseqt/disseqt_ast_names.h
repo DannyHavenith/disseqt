@@ -38,22 +38,12 @@ namespace disseqt
 
             text( ) = default;
 
-            template<typename OtherTag>
-            text( const text<OtherTag> &other): value( other.value){}
+            text( const text<generic_name_tag> &other): value( other.value){}
 
-            template<typename OtherTag>
-            text<TagType>& operator=( const text<OtherTag> &other)
+
+            text<TagType>& operator=( const text<generic_name_tag> &other)
             {
                 value = other.value;
-                return *this;
-            }
-
-            text( const text_reference &ref)
-            :value( ref) {}
-
-            text *operator=( const text_reference &ref)
-            {
-                value = ref;
                 return *this;
             }
 

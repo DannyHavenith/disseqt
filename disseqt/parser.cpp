@@ -14,7 +14,6 @@
 #include <iterator>
 #include <sstream>
 
-#include "disseqt_ast_print.h"
 
 
 namespace disseqt

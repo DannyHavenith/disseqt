@@ -54,7 +54,12 @@ namespace disseqt
         typename Rule<ast::explain_stmt     >::t explain_stmt;
         typename Rule<ast::AlternateAction  >::t conflict_clause;
         typename Rule<ast::composite_table_name >::t composite_table_name;
-        typename Rule<ast::composite_column_name>::t composite_column_name;
+        qi::rule<
+            Iterator,
+            ast::composite_column_name(),
+            Skipper,
+            qi::locals<ast::generic_name, ast::generic_name>>
+                composite_column_name;
         typename Rule<ast::function_arguments   >::t function_arguments;
         typename Rule<ast::case_expression  >::t case_when;
         typename Rule<ast::select_statement >::t select_stmt;

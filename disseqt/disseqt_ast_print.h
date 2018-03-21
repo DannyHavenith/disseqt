@@ -7,6 +7,7 @@
 
 #ifndef DISSEQT_AST_PRINT_H_
 #define DISSEQT_AST_PRINT_H_
+#include <boost/spirit/include/support_unused.hpp>
 #include <boost/variant.hpp>
 
 
@@ -17,7 +18,7 @@ namespace ast {
     std::ostream &print( std::ostream &output, const std::vector<ElementType> &node);
     std::ostream &print( std::ostream &output, bool val);
     std::ostream &print( std::ostream &output, const boost::iterator_range< std::string::const_iterator> &keyword);
-    std::ostream &print( std::ostream &output, const boost::spirit::qi::unused_type &);
+    std::ostream &print( std::ostream &output, const boost::spirit::unused_type &);
     template< typename NodeType>
     std::ostream &print( std::ostream &output, const boost::recursive_wrapper<NodeType> &node);
 
@@ -81,7 +82,7 @@ namespace ast {
         return output << "{defaults}";
     }
 
-    std::ostream &print( std::ostream &output, const boost::spirit::qi::unused_type &)
+    std::ostream &print( std::ostream &output, const boost::spirit::unused_type &)
     {
         return output;
     }

@@ -562,7 +562,7 @@ SqlGrammar<Iterator, Skipper>::SqlGrammar( const Tokens &t)
 
     collate =
                 singular                        [_val = _1]
-            >>  -(t.COLLATE >> collation_name)  [_val = ph::bind(collateexp, _val, _1)]
+            >>  -(t.COLLATE >> collation_name   [_val = ph::bind(collateexp, _val, _1)])
             ;
     DISSEQT_DEBUG_NODE( collate);
 
@@ -659,9 +659,9 @@ SqlGrammar<Iterator, Skipper>::SqlGrammar( const Tokens &t)
     DISSEQT_DEBUG_NODE( signed_number);
 
     composite_column_name =
-                name         [ph::at_c<2>(_val) = _1]
-            >> -('.' >> name [ph::at_c<1>(_val) = ph::at_c<2>(_val), ph::at_c<2>(_val) = _1] )
-            >> -('.' >> name [ph::at_c<0>(_val) = ph::at_c<1>(_val), ph::at_c<1>(_val) = ph::at_c<2>(_val), ph::at_c<2>(_val) = _1] )
+                name         [ph::at_c<2>(_val) = _1, _a = _1]
+            >> -('.' >> name [ph::at_c<1>(_val) = _a, ph::at_c<2>(_val) = _1, _b = _1] )
+            >> -('.' >> name [ph::at_c<0>(_val) = _a, ph::at_c<1>(_val) = _b, ph::at_c<2>(_val) = _1] )
             ;
     DISSEQT_DEBUG_NODE( composite_column_name);
 
